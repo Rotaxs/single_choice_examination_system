@@ -2,14 +2,20 @@
 #define UTILS_H
 
 // 表格
-#define TABLE_UL "\u250C" // ┌
-#define TABLE_U "\u2500"  // ─
-#define TABLE_UR "\u2510" // ┐
-#define TABLE_L "\u2502"  // │
-#define TABLE_R "\u2502"  // │
-#define TABLE_BL "\u2514" // └
-#define TABLE_B "\u2500"  // ─
-#define TABLE_BR "\u2518" // ┘
+#define TABLE_UL "\u250F" // ┏
+#define TABLE_U "\u2501"  // ━
+#define TABLE_UM "\u2533" // ┳
+#define TABLE_UR "\u2513" // ┓
+#define TABLE_MM "\u254B" // ╋
+#define TABLE_L "\u2503"  // ┃
+#define TABLE_LM "\u2523" // ┣
+#define TABLE_R "\u2503"  // ┃
+#define TABLE_RM "\u252B" // ┫
+#define TABLE_BL "\u2517" // ┗
+#define TABLE_M "\u2503"  // ┃
+#define TABLE_B "\u2501"  // ━
+#define TBLAE_BM "\u253B" // ┻
+#define TABLE_BR "\u251B" // ┛
 
 // 颜色和光标
 #define CLS "\033[2J\033[H"
@@ -99,11 +105,19 @@ bool get_answer_input(char *answer);
 bool get_category_input(char *category, int category_size);
 bool get_id_input(int *id);
 bool get_y_or_n_input();
+bool get_title_input(char *title, int title_size);
+bool get_score_input(int *score);
+bool get_date_input(char *date);
 
 void spin_loading(char *content, int loading_time);
 int get_digit_count(int num);
 void cipher(char *pwd);
 void flush_buffer();
+bool delete_item_from_array(int *arr, int *len, int item);
+
+Date get_date();
+bool is_valid_date(char *str);
+Date str_to_date(char *str);
 
 // 用户数据 链表操作
 UserNode *list_user_create();
@@ -127,18 +141,20 @@ QuestionNode *list_question_search(QuestionNode *head, int id);
 int list_question_search_by_category(QuestionNode *head, char *category, int *ids);
 void list_question_destroy(QuestionNode *head);
 int list_question_get_len(QuestionNode *head);
+int list_question_get_ids(QuestionNode *head, int *ids);
 
 // 试卷链表操作
 PaperNode *list_paper_create();
 void list_paper_add(PaperNode *head, int id, char *title,
                     int *question_ids, int *question_scores,
                     int total_question, int paper_score,
-                    char *start_time, char *end_time);
+                    char *start_time, char *end_time, bool published);
 bool list_paper_delete(PaperNode *head, int target_id);
 bool list_paper_modify(PaperNode *head, int target_id, char *title,
                        int *question_ids, int *question_scores,
                        int total_question, int paper_score,
                        char *start_time, char *end_time);
 void list_paper_destroy(PaperNode *head);
+int list_paper_get_len(PaperNode *head);
 
 #endif

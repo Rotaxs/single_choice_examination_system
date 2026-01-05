@@ -9,7 +9,8 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
                 int *user_id, int *paper_id, int *question_id);
 
 void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id);
-void admin_manage_paper_menu(PaperNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id);
+void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id);
+void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper);
 void admin_manage_question_menu(QuestionNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id);
 
 void stu_menu();

@@ -63,8 +63,9 @@ typedef struct PaperNode
     int question_scores[MAX_PAPER_QUESTIONS]; // 组卷时可修改单题分值
     int total_questions;                      // 总题数
     int paper_score;                          // 试卷总分
-    char start_time[TIMELEN + 1];             // 开始考试的时间
+    char start_time[TIMELEN + 1];             // 开始考试的时间，时间格式 YYYY/MM/DD HH:MM
     char end_time[TIMELEN + 1];               // 考试结束的时间
+    bool published;                           // 是否公布试卷
     struct PaperNode *next;
 } PaperNode;
 
@@ -81,5 +82,14 @@ typedef struct Text
     char *content;
     int length; // 一个汉字宽为 2，一个字母宽为 1
 } Text;
+
+typedef struct Date
+{
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+} Date;
 
 #endif

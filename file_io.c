@@ -161,7 +161,7 @@ bool load_paper_data(PaperNode *head)
     {
         list_paper_add(head, paper_data.id, paper_data.title,
                        paper_data.question_ids, paper_data.question_scores, paper_data.total_questions,
-                       paper_data.paper_score, paper_data.start_time, paper_data.end_time);
+                       paper_data.paper_score, paper_data.start_time, paper_data.end_time, paper_data.published);
     }
 
     fclose(fp);

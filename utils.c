@@ -2,6 +2,7 @@
 #include "common.h"
 #include "file_io.h"
 #include <conio.h>
+#include <time.h>
 
 /**
  * @brief 工具函数：加密与解密
@@ -249,6 +250,42 @@ bool get_y_or_n_input()
 }
 
 /**
+ * @brief 工具函数：获取标题的输入
+ * @param title 标题字符串
+ * @param title_size 标题字符串的大小
+ * @return 如果长度不超过限制，返回 true，否则返回 false
+ */
+bool get_title_input(char *title, int title_size)
+{
+    return get_option_input(title, title_size);
+}
+
+/**
+ * @brief 工具函数：获取分数的输入
+ * @param score 分数指针
+ * @return 读取成功返回 true，否则返回 false
+ */
+bool get_score_input(int *score)
+{
+    return get_id_input(score);
+}
+
+/**
+ * @brief 工具函数：获取日期的输入
+ * @param date 字符串格式的日期
+ * @return 如果日期格式正确，返回 true，否则返回 false
+ */
+bool get_date_input(char *date)
+{
+    if (fgets(date, 20, stdin) != NULL)
+    {
+        date[strcspn(date, "\n")] = '\0';
+        return is_valid_date(date);
+    }
+    return false;
+}
+
+/**
  * @brief 工具函数：加载动画
  * @param content 加载动画显示的内容
  * @param loading_time 加载动画持续的时间，单位为微秒（μs）
@@ -278,6 +315,147 @@ int get_digit_count(int num)
         res++;
     }
     return res;
+}
+
+/**
+ * @brief 交换两个数的值
+ * @param a 第一个数的指针
+ * @param b 第二个数的指针
+ */
+void swap(int *a, int *b)
+{
+    int temp;
+    temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+/**
+ * @brief 删除元素
+ * @param arr 要删除元素的数组，数组元素不能重复
+ * @param len 数组长度的指针
+ * @return 删除成功返回 true，否则返回 false
+ */
+bool delete_item_from_array(int *arr, int *len, int item)
+{
+    int target_index;
+    for (target_index = 0; target_index < *len; target_index++)
+    {
+        if (arr[target_index] == item)
+            break;
+    }
+    if (target_index == 0 && arr[0] != item)
+        return false;
+    (*len)--;
+    for (int i = target_index; i < *len; i++)
+        arr[i] = arr[i + 1];
+}
+
+// =============================== 日期相关工具 ====================================
+
+/**
+ * @brief 工具函数：获取当前时间
+ * @return 返回 Date 结构体
+ */
+Date get_date()
+{
+    Date date;
+    struct tm *info;
+    time_t rawtime;
+
+    time(&rawtime);
+    info = localtime(&rawtime);
+
+    date.year = info->tm_year + 1900;
+    date.month = info->tm_mon + 1;
+    date.day = info->tm_mday;
+    date.hour = info->tm_hour;
+    date.minute = info->tm_min;
+
+    return date;
+}
+
+/**
+ * @brief 工具函数：判断一个字符是否是数字字符
+ * @param d 要判断的字符
+ */
+bool is_digit(char d)
+{
+    return d >= '0' && d <= '9';
+}
+
+/**
+ * @brief 检查字符串是否为规定的时间格式 YYYY/MM/DD HH:MM
+ * @param str 要检查的字符串
+ * @return 如果字符串符合要求，返回 true，否则返回 false
+ */
+bool is_valid_date(char *str)
+{
+    if (strlen(str) != 16)
+        return false;
+
+    // 检查年份
+    for (int i = 0; i < 4; i++)
+    {
+        if (!is_digit(str[i]))
+            return false;
+    }
+    int year = (str[0] - '0') * 1000 + (str[1] - '0') * 100 + (str[2] - '0') * 10 + str[3] - '0';
+
+    // 检查分隔符
+    if (str[4] != '/' || str[7] != '/' || str[10] != ' ' || str[13] != ':')
+        return false;
+
+    // 检查月
+    if (!is_digit(str[5]) || !is_digit(str[6]))
+        return false;
+    int month = (str[5] - '0') * 10 + str[6] - '0';
+    if (month <= 0 || month > 12)
+        return false;
+
+    // 检查日
+    if (!is_digit(str[8]) || !is_digit(str[9]))
+        return false;
+    int days_per_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (year % 4 == 0 && year % 100 != 0)
+        days_per_month[1] = 29;
+    else if (year % 400 == 0)
+        days_per_month[1] = 29;
+    int day = (str[8] - '0') * 10 + str[9] - '0';
+    if (day <= 0 || day > days_per_month[month - 1])
+        return false;
+
+    // 检查时
+    if (!is_digit(str[11]) || !is_digit(str[12]))
+        return false;
+    int hour = (str[11] - '0') * 10 + str[12] - '0';
+    if (hour < 0 || hour >= 24)
+        return false;
+
+    // 检查分
+    if (!is_digit(str[14]) || !is_digit(str[15]))
+        return false;
+    int minute = (str[14] - '0') * 10 + str[15] - '0';
+    if (minute < 0 || minute >= 60)
+        return false;
+
+    return true;
+}
+
+/**
+ * @brief 将字符串格式的日期转化为结构体
+ * @param str 字符串格式的日期，格式为 YYYY/MM/DD HH:MM
+ * @return 返回结构体格式的日期
+ */
+Date str_to_date(char *str)
+{
+    Date date;
+    date.year = (str[0] - '0') * 1000 + (str[1] - '0') * 100 + (str[2] - '0') * 10 + str[3] - '0';
+    date.month = (str[5] - '0') * 10 + str[6] - '0';
+    date.day = (str[8] - '0') * 10 + str[9] - '0';
+    date.hour = (str[11] - '0') * 10 + str[12] - '0';
+    date.minute = (str[14] - '0') * 10 + str[15] - '0';
+    return date;
 }
 
 // =================== 用户数据的链表操作 ====================
@@ -490,6 +668,15 @@ int list_question_get_len(QuestionNode *head)
     return total;
 }
 
+int list_question_get_ids(QuestionNode *head, int *ids)
+{
+    int len = 0;
+    QuestionNode *node = head->next;
+    for (; node; node = node->next)
+        ids[len++] = node->id;
+    return len;
+}
+
 // =================== 试卷数据的链表操作 ====================
 
 PaperNode *list_paper_create()
@@ -502,7 +689,7 @@ PaperNode *list_paper_create()
 void list_paper_add(PaperNode *head, int id, char *title,
                     int *question_ids, int *question_scores,
                     int total_question, int paper_score,
-                    char *start_time, char *end_time)
+                    char *start_time, char *end_time, bool published)
 {
     PaperNode *new_node = (PaperNode *)malloc(sizeof(PaperNode));
 
@@ -517,6 +704,7 @@ void list_paper_add(PaperNode *head, int id, char *title,
     new_node->paper_score = paper_score;
     strcpy(new_node->start_time, start_time);
     strcpy(new_node->end_time, end_time);
+    new_node->published = published;
 
     new_node->next = head->next;
     head->next = new_node;
@@ -575,4 +763,13 @@ void list_paper_destroy(PaperNode *head)
         free(cur);
         cur = next;
     }
+}
+
+int list_paper_get_len(PaperNode *head)
+{
+    PaperNode *node = head->next;
+    int len = 0;
+    for (; node; node = node->next)
+        len++;
+    return len;
 }

@@ -19,14 +19,17 @@ int main()
     int user_id, paper_id, question_id;
     load_ids(&user_id, &paper_id, &question_id);
 
-    // main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
-    admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
+    main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
+    // admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
     // add_question(question_head, 1);
     // printf("%d", sizeof(QuestionNode) - sizeof(QuestionNode *));
 
     list_user_destroy(user_head);
     list_paper_destroy(paper_head);
     list_question_destroy(question_head);
+
+    // char *a = "使用 [↑/↓] 移动，[Enter] 确认";
+    // printf("%d", get_utf8_display_width(a));
 
     return 0;
 }

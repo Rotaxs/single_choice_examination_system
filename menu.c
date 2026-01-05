@@ -156,7 +156,6 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
     const int option_count = 4;
     const int question_option = 0, user_option = 1, paper_option = 2, exit_option = 3;
     const Text title = {"管理员操作界面", 14};
-    // TODO 这里的提示可以打印试题数，试卷数，学生数
     const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
     Text options[] = {
         {"1. 试题管理", 11},
@@ -187,7 +186,7 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
             }
             else if (selection == paper_option)
             {
-                admin_manage_paper_menu(paper_head, user_id, paper_id, question_id);
+                admin_manage_paper_menu(paper_head, question_head, user_id, paper_id, question_id);
                 printf(CLS HIDE_CURSOR);
             }
             else if (selection == question_option)
@@ -259,13 +258,82 @@ void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, i
     }
 }
 
-void admin_manage_paper_menu(PaperNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
+void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper)
+{
+    const int option_count = 8;
+    const int assemble_option = 0, title_option = 1, score_option = 2, time_option = 3, browse_option = 4, publish_option = 5, export_option = 6, exit_option = 7;
+    char buffer[100];
+    const Text title = {"组卷系统", 8};
+    Text prompt;
+    Text options[] = {
+        {"1. 添加试题", 11},
+        {"2. 修改试卷标题", 15},
+        {"3. 设置试卷分值", 15},
+        {"4. 设置考试时间", 15},
+        {"5. 浏览当前试卷", 15},
+        {"6. 发布当前试卷", 15},
+        {"7. 导出当前试卷", 15},
+        {"0. 保存并退出", 13}};
+
+    printf(HIDE_CURSOR CLS);
+    int selection = 0;
+
+    while (1)
+    {
+        sprintf(buffer, "正在编辑试卷 %s，试卷 ID 为 %d", cur_paper->title, cur_paper->id);
+        prompt.content = buffer;
+        prompt.length = 40; // TODO 如何计算宽度
+        draw_menu(title, prompt, selection, options, option_count);
+        int key = get_keyboard_input();
+
+        if (key == KEY_DOWN)
+            selection = (selection + 1) % option_count;
+        else if (key == KEY_UP)
+            selection = (selection - 1 + option_count) % option_count;
+        else if (key == KEY_ENTER)
+        {
+            if (selection == exit_option)
+                break;
+            else if (selection == assemble_option)
+            {
+                choose_question(question_head, cur_paper);
+            }
+            else if (selection == title_option)
+            {
+                printf(SHOW_CURSOR);
+                modify_title(cur_paper);
+                printf(HIDE_CURSOR);
+            }
+            else if (selection == score_option)
+            {
+                printf(SHOW_CURSOR);
+                set_scores(question_head, cur_paper);
+                printf(HIDE_CURSOR);
+            }
+            else if (selection == time_option)
+            {
+                printf(SHOW_CURSOR);
+                set_time(cur_paper);
+                printf(HIDE_CURSOR);
+            }
+            else if (selection == publish_option)
+            {
+                printf(HIDE_CURSOR);
+                publish_paper(cur_paper);
+            }
+            printf(HIDE_CURSOR CLS);
+        }
+    }
+}
+
+void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
 {
     const int option_count = 5;
-    const int _option = 0, see_option = 1, hand_option = 2, export_option = 3, exit_option = 4;
-    const Text title = {"组卷系统", 8};
-    // TODO 这里的提示当前的试卷数
-    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
+    const int assemble_option = 0, browse_option = 1, publish_option = 2, export_option = 3, exit_option = 4;
+    const Text title = {"试卷管理", 8};
+    char buffer[40];
+    int len;
+    Text prompt;
     Text options[] = {
         {"1. 开始组卷", 11},
         {"2. 浏览试卷", 11},
@@ -278,6 +346,10 @@ void admin_manage_paper_menu(PaperNode *head, int *cur_stu_id, int *cur_paper_id
 
     while (1)
     {
+        len = list_paper_get_len(paper_head);
+        sprintf(buffer, "当前共有 %d 张试卷", len);
+        prompt.content = buffer;
+        prompt.length = 16 + get_digit_count(len);
         draw_menu(title, prompt, selection, options, option_count);
         int key = get_keyboard_input();
 
@@ -289,6 +361,18 @@ void admin_manage_paper_menu(PaperNode *head, int *cur_stu_id, int *cur_paper_id
         {
             if (selection == exit_option)
                 break;
+            else if (selection == assemble_option)
+            {
+                char title[TITLELEN + 1];
+                PaperNode *cur_paper = init_cur_paper(title, TITLELEN + 1, cur_paper_id);
+                printf(HIDE_CURSOR);
+                admin_assemble_paper_menu(question_head, cur_paper);
+
+                add_paper(paper_head, cur_paper);
+                save_paper_data(paper_head);
+                save_ids(*cur_stu_id, *cur_paper_id, *cur_question_id);
+            }
+            printf(CLS HIDE_CURSOR);
         }
     }
 }
