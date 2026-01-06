@@ -9,7 +9,7 @@ void add_stu(UserNode *head, int *cur_id);
 void del_stu(UserNode *head);
 void modify_stu(UserNode *head);
 void add_question(QuestionNode *head, int *cur_id);
-void del_question(QuestionNode *head);
+void del_question(QuestionNode *question_head, PaperNode *paper_head);
 void modify_question(QuestionNode *head);
 void browse_question(QuestionNode *head);
 void search_question(QuestionNode *head);
@@ -20,6 +20,11 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper);
 void modify_title(PaperNode *cur_paper);
 void set_scores(QuestionNode *q_head, PaperNode *cur_paper);
 void set_time(PaperNode *cur_paper);
-void publish_paper(PaperNode *cur_paper);
+void publish_cur_paper(PaperNode *cur_paper);
+void browse_cur_paper(QuestionNode *question_head, PaperNode *cur_paper);
+void browse_paper(PaperNode *paper_head, QuestionNode *question_head);
+void delete_paper(PaperNode *head);
+void publish_paper(PaperNode *head);
+PaperNode *get_edit_paper(PaperNode *head);
 
 #endif

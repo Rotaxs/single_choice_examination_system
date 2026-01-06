@@ -3,11 +3,13 @@
 #include "file_io.h"
 #include "admin.h"
 #include "menu.h"
+#include <time.h>
 
 int main()
 {
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
+    srand(time(NULL));
 
     UserNode *user_head = list_user_create();
     PaperNode *paper_head = list_paper_create();
@@ -19,17 +21,13 @@ int main()
     int user_id, paper_id, question_id;
     load_ids(&user_id, &paper_id, &question_id);
 
-    main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
-    // admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
-    // add_question(question_head, 1);
-    // printf("%d", sizeof(QuestionNode) - sizeof(QuestionNode *));
+    // main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
+    admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
+    // stu_menu(user_head, question_head, paper_head);
 
     list_user_destroy(user_head);
     list_paper_destroy(paper_head);
     list_question_destroy(question_head);
-
-    // char *a = "使用 [↑/↓] 移动，[Enter] 确认";
-    // printf("%d", get_utf8_display_width(a));
 
     return 0;
 }

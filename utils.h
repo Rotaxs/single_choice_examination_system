@@ -108,12 +108,16 @@ bool get_y_or_n_input();
 bool get_title_input(char *title, int title_size);
 bool get_score_input(int *score);
 bool get_date_input(char *date);
+bool get_num_input(int *num);
 
 void spin_loading(char *content, int loading_time);
 int get_digit_count(int num);
 void cipher(char *pwd);
 void flush_buffer();
 bool delete_item_from_array(int *arr, int *len, int item);
+void bubble_sort(int *arr, int len, bool reverse);
+int randint(int min, int max);
+void get_n_random_from_arr(int *src, int len, int *dst, int n);
 
 Date get_date();
 bool is_valid_date(char *str);
@@ -129,6 +133,7 @@ bool list_user_delete(UserNode *head, int target_id);
 UserNode *list_user_search(UserNode *head, char *account);
 void list_user_destroy(UserNode *head);
 int list_user_get_len(UserNode *head);
+bool id_in_paper(int id, PaperNode *head);
 
 // 试题链表操作
 QuestionNode *list_question_create();
@@ -154,7 +159,9 @@ bool list_paper_modify(PaperNode *head, int target_id, char *title,
                        int *question_ids, int *question_scores,
                        int total_question, int paper_score,
                        char *start_time, char *end_time);
+PaperNode *list_paper_search(PaperNode *head, int id);
 void list_paper_destroy(PaperNode *head);
 int list_paper_get_len(PaperNode *head);
+int list_paper_get_ids(PaperNode *head, int *ids);
 
 #endif

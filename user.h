@@ -3,6 +3,7 @@
 
 #include "common.h"
 
-bool user_login(UserNode *head);
+UserNode *user_login(UserNode *head);
+void modify_password(UserNode *cur_stu);
 
 #endif

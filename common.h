@@ -21,6 +21,7 @@
 #define TITLELEN 100                      // 试卷标题字符串的最大长度
 #define MAX_PAPER_QUESTIONS 50            // 试卷最大题目数
 #define TIMELEN 25                        // 格式如 "2025-12-28 15:00"
+#define MAX_PAPER_COUNT 100               // 本地保存的试卷的最大数量
 #define PAPERDATAPATH "./data/papers.dat" // 本地保存试卷的位置
 
 // 用户相关常量
@@ -74,6 +75,7 @@ typedef struct UserNode
     int id;                            // 用户唯一标识
     char account[MAX_ACCOUNT_LEN + 1]; // 用户的账号
     char password[MAX_PWD_LEN + 1];    // 用户的密码
+    int exercised_question_count;      // 练习题量
     struct UserNode *next;
 } UserNode;
 

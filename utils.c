@@ -286,6 +286,16 @@ bool get_date_input(char *date)
 }
 
 /**
+ * @brief 工具函数：获取数字的输入
+ * @param num 输入的数字的指针
+ * @return 读取成功返回 true，否则返回 false
+ */
+bool get_num_input(int *num)
+{
+    return get_id_input(num);
+}
+
+/**
  * @brief 工具函数：加载动画
  * @param content 加载动画显示的内容
  * @param loading_time 加载动画持续的时间，单位为微秒（μs）
@@ -331,7 +341,7 @@ void swap(int *a, int *b)
 }
 
 /**
- * @brief 删除元素
+ * @brief 工具函数：删除数组中的元素
  * @param arr 要删除元素的数组，数组元素不能重复
  * @param len 数组长度的指针
  * @return 删除成功返回 true，否则返回 false
@@ -349,6 +359,40 @@ bool delete_item_from_array(int *arr, int *len, int item)
     (*len)--;
     for (int i = target_index; i < *len; i++)
         arr[i] = arr[i + 1];
+}
+
+/**
+ * @brief 工具函数：生成一个随机整数
+ * @param min 随机整数的下界
+ * @param max 随机整数的上界
+ */
+int randint(int min, int max)
+{
+    int range = max - min + 1;
+    return rand() % range + min;
+}
+
+/**
+ * @brief 工具函数：（Fhiser-Yates 随机洗牌算法）随机获取一个数组中的 n 个元素
+ * @param src 原数组
+ * @param len 原数组的长度
+ * @param dst 随机数组
+ * @param n 随机数组的长度
+ */
+void get_n_random_from_arr(int *src, int len, int *dst, int n)
+{
+    if (n > len)
+        return;
+    int *temp = (int *)malloc(sizeof(int) * len);
+    for (int i = 0; i < len; i++)
+        temp[i] = src[i];
+    for (int i = 0; i < n; i++)
+    {
+        int j = randint(i, len - 1);
+        swap(temp + i, temp + j);
+        dst[i] = temp[i];
+    }
+    free(temp);
 }
 
 // =============================== 日期相关工具 ====================================
@@ -458,6 +502,35 @@ Date str_to_date(char *str)
     return date;
 }
 
+/**
+ * @brief 冒泡排序，默认升序
+ * @param arr 要排序的数据
+ * @param len 数组的长度
+ * @param reverse 是否倒序
+ */
+void bubble_sort(int *arr, int len, bool reverse)
+{
+    bool swapped = false;
+    for (int i = 0; i < len - 1; i++)
+    {
+        for (int j = 0; j < len - i - 1; j++)
+        {
+            if (!reverse && arr[j] > arr[j + 1])
+            {
+                swap(arr + j, arr + j + 1);
+                swapped = true;
+            }
+            else if (reverse && arr[j] < arr[j + 1])
+            {
+                swap(arr + j, arr + j + 1);
+                swapped = true;
+            }
+        }
+        if (!swapped)
+            break;
+    }
+}
+
 // =================== 用户数据的链表操作 ====================
 
 UserNode *list_user_create()
@@ -484,6 +557,7 @@ bool list_user_add(UserNode *head, int id, char *account, char *password)
         return false;
     UserNode *user_node = (UserNode *)malloc(sizeof(UserNode));
     user_node->id = id;
+    user_node->exercised_question_count = 0;
     strcpy(user_node->account, account);
     strcpy(user_node->password, password);
     user_node->next = head->next;
@@ -601,6 +675,7 @@ bool list_question_delete(QuestionNode *head, int target_id)
             return true;
         }
     }
+
     return false;
 }
 
@@ -675,6 +750,26 @@ int list_question_get_ids(QuestionNode *head, int *ids)
     for (; node; node = node->next)
         ids[len++] = node->id;
     return len;
+}
+
+/**
+ * @brief 查找 id 为 id 的题目是否已经出现在试卷库中
+ * @param id 要查找的题目的 id
+ * @param head 试卷数据链表
+ * @return 如果存在，返回 true，否则返回 false
+ */
+bool id_in_paper(int id, PaperNode *head)
+{
+    PaperNode *cur_paper = head->next;
+    for (; cur_paper; cur_paper = cur_paper->next)
+    {
+        for (int i = 0; i < cur_paper->total_questions; i++)
+        {
+            if (cur_paper->question_ids[i] == id)
+                return true;
+        }
+    }
+    return false;
 }
 
 // =================== 试卷数据的链表操作 ====================
@@ -754,6 +849,17 @@ bool list_paper_modify(PaperNode *head, int target_id, char *title,
     return false;
 }
 
+PaperNode *list_paper_search(PaperNode *head, int id)
+{
+    PaperNode *cur_paper = head->next;
+    for (; cur_paper; cur_paper = cur_paper->next)
+    {
+        if (cur_paper->id == id)
+            return cur_paper;
+    }
+    return NULL;
+}
+
 void list_paper_destroy(PaperNode *head)
 {
     PaperNode *cur = head;
@@ -771,5 +877,14 @@ int list_paper_get_len(PaperNode *head)
     int len = 0;
     for (; node; node = node->next)
         len++;
+    return len;
+}
+
+int list_paper_get_ids(PaperNode *head, int *ids)
+{
+    PaperNode *node = head->next;
+    int len = 0;
+    for (; node; node = node->next)
+        ids[len++] = node->id;
     return len;
 }

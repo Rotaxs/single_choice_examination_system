@@ -131,9 +131,10 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
             }
             else if (selection == stu_option)
             {
-                if (user_login(user_head))
+                UserNode *cur_stu = user_login(user_head);
+                if (cur_stu != NULL)
                 {
-                    stu_menu();
+                    stu_menu(cur_stu, question_head, paper_head);
                     printf(CLS HIDE_CURSOR);
                 }
                 else
@@ -191,7 +192,7 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
             }
             else if (selection == question_option)
             {
-                admin_manage_question_menu(question_head, user_id, paper_id, question_id);
+                admin_manage_question_menu(question_head, paper_head, user_id, paper_id, question_id);
                 printf(CLS HIDE_CURSOR);
             }
         }
@@ -260,8 +261,8 @@ void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, i
 
 void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper)
 {
-    const int option_count = 8;
-    const int assemble_option = 0, title_option = 1, score_option = 2, time_option = 3, browse_option = 4, publish_option = 5, export_option = 6, exit_option = 7;
+    const int option_count = 7;
+    const int assemble_option = 0, title_option = 1, score_option = 2, time_option = 3, browse_option = 4, publish_option = 5, exit_option = 6;
     char buffer[100];
     const Text title = {"组卷系统", 8};
     Text prompt;
@@ -272,7 +273,6 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
         {"4. 设置考试时间", 15},
         {"5. 浏览当前试卷", 15},
         {"6. 发布当前试卷", 15},
-        {"7. 导出当前试卷", 15},
         {"0. 保存并退出", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -282,7 +282,7 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
     {
         sprintf(buffer, "正在编辑试卷 %s，试卷 ID 为 %d", cur_paper->title, cur_paper->id);
         prompt.content = buffer;
-        prompt.length = 40; // TODO 如何计算宽度
+        prompt.length = 50; // TODO 如何计算宽度
         draw_menu(title, prompt, selection, options, option_count);
         int key = get_keyboard_input();
 
@@ -319,7 +319,12 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
             else if (selection == publish_option)
             {
                 printf(HIDE_CURSOR);
-                publish_paper(cur_paper);
+                publish_cur_paper(cur_paper);
+            }
+            else if (selection == browse_option)
+            {
+                printf(HIDE_CURSOR);
+                browse_cur_paper(question_head, cur_paper);
             }
             printf(HIDE_CURSOR CLS);
         }
@@ -328,8 +333,8 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
 
 void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
 {
-    const int option_count = 5;
-    const int assemble_option = 0, browse_option = 1, publish_option = 2, export_option = 3, exit_option = 4;
+    const int option_count = 6;
+    const int assemble_option = 0, browse_option = 1, delete_option = 2, edit_option = 3, publish_option = 4, exit_option = 5;
     const Text title = {"试卷管理", 8};
     char buffer[40];
     int len;
@@ -337,8 +342,9 @@ void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head,
     Text options[] = {
         {"1. 开始组卷", 11},
         {"2. 浏览试卷", 11},
-        {"3. 发布试卷", 11},
-        {"4. 导出试卷", 11},
+        {"3. 删除试卷", 11},
+        {"4. 编辑试卷", 11},
+        {"5. 发布试卷", 11},
         {"0. 返回上一级", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -372,12 +378,38 @@ void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head,
                 save_paper_data(paper_head);
                 save_ids(*cur_stu_id, *cur_paper_id, *cur_question_id);
             }
+            else if (selection == browse_option)
+            {
+                printf(HIDE_CURSOR);
+                browse_paper(paper_head, question_head);
+            }
+            else if (selection == delete_option)
+            {
+                printf(HIDE_CURSOR);
+                delete_paper(paper_head);
+                save_paper_data(paper_head);
+            }
+            else if (selection == publish_option)
+            {
+                printf(HIDE_CURSOR);
+                publish_paper(paper_head);
+                save_paper_data(paper_head);
+            }
+            else if (selection == edit_option)
+            {
+                PaperNode *cur_paper = get_edit_paper(paper_head);
+                if (cur_paper != NULL)
+                {
+                    admin_assemble_paper_menu(question_head, cur_paper);
+                    save_paper_data(paper_head);
+                }
+            }
             printf(CLS HIDE_CURSOR);
         }
     }
 }
 
-void admin_manage_question_menu(QuestionNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
+void admin_manage_question_menu(QuestionNode *question_head, PaperNode *paper_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
 {
     const int option_count = 6;
     const int add_option = 0, del_option = 1, modify_option = 2, search_option = 3, browse_option = 4, exit_option = 5;
@@ -398,7 +430,7 @@ void admin_manage_question_menu(QuestionNode *head, int *cur_stu_id, int *cur_pa
 
     while (1)
     {
-        question_count = list_question_get_len(head);
+        question_count = list_question_get_len(question_head);
         sprintf(buffer, "题库目前共有 %d 道试题", question_count);
         prompt.content = buffer;
         prompt.length = 20 + get_digit_count(question_count);
@@ -416,51 +448,51 @@ void admin_manage_question_menu(QuestionNode *head, int *cur_stu_id, int *cur_pa
             else if (selection == add_option)
             {
                 printf(SHOW_CURSOR);
-                add_question(head, cur_question_id);
-                save_question_data(head);
+                add_question(question_head, cur_question_id);
+                save_question_data(question_head);
                 save_ids(*cur_stu_id, *cur_paper_id, *cur_question_id);
                 printf(HIDE_CURSOR);
             }
             else if (selection == del_option)
             {
                 printf(SHOW_CURSOR);
-                del_question(head);
-                save_question_data(head);
+                del_question(question_head, paper_head);
+                save_question_data(question_head);
                 printf(HIDE_CURSOR);
             }
             else if (selection == modify_option)
             {
                 printf(SHOW_CURSOR);
-                modify_question(head);
-                save_question_data(head);
+                modify_question(question_head);
+                save_question_data(question_head);
                 printf(HIDE_CURSOR);
             }
             else if (selection == search_option)
             {
                 printf(SHOW_CURSOR);
-                search_question(head);
+                search_question(question_head);
                 printf(HIDE_CURSOR);
             }
             else if (selection == browse_option)
             {
                 printf(HIDE_CURSOR);
-                browse_question(head);
+                browse_question(question_head);
             }
             printf(CLS HIDE_CURSOR);
         }
     }
 }
 
-void stu_menu()
+void stu_menu(UserNode *cur_stu, QuestionNode *question_head, PaperNode *paper_head)
 {
-    const int option_count = 3;
-    const int exercise_option = 0, exam_option = 1, exit_option = 2;
+    const int option_count = 4;
+    const int exercise_option = 0, exam_option = 1, password_option = 2, exit_option = 3;
     const Text title = {"学生操作界面", 12};
-    // TODO 这里的信息可以打印当前学生的信息
     const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
     Text options[] = {
         {"1. 练习", 7},
         {"2. 考试", 7},
+        {"3. 修改密码", 11},
         {"0. 返回主菜单", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -479,6 +511,12 @@ void stu_menu()
         {
             if (selection == exit_option)
                 break;
+            else if (selection == password_option)
+            {
+                printf(SHOW_CURSOR);
+                modify_password(cur_stu);
+            }
         }
+        printf(CLS HIDE_CURSOR);
     }
 }

@@ -292,7 +292,7 @@ void add_question(QuestionNode *head, int *cur_id)
 /**
  * @brief 菜单功能函数：删除试题
  */
-void del_question(QuestionNode *head)
+void del_question(QuestionNode *question_head, PaperNode *paper_head)
 {
     int id;
     printf(CLS);
@@ -304,7 +304,13 @@ void del_question(QuestionNode *head)
             ERR("请输入正确的 ID");
             printf("请输入要删除的试题的 ID：");
         }
-        if (list_question_delete(head, id))
+        if (id_in_paper(id, paper_head))
+        {
+            ERR("不能删除这道题，因为现存的试卷中收录了该题");
+            usleep(WAITING_TIME);
+            return;
+        }
+        if (list_question_delete(question_head, id))
             INFO("删除成功");
         else
             ERR("该试题不存在");
@@ -483,7 +489,8 @@ void display_questions(QuestionNode *head, int *ids, int size)
         for (int j = i; j < page_end; j++)
         {
             print_enter;
-            print_question(list_question_search(head, ids[j]));
+            QuestionNode *cur_question = list_question_search(head, ids[j]);
+            print_question(cur_question);
             print_enter;
             print_table(TABLE_B, MENU_WIDTH);
         }
@@ -526,6 +533,7 @@ void browse_question(QuestionNode *head)
     int size = 0;
     for (; node; node = node->next)
         ids[size++] = node->id;
+    bubble_sort(ids, size, false);
     display_questions(head, ids, size);
 }
 
@@ -631,6 +639,7 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
     int ids[MAXQ_COUNT];
     bool is_chosen[MAXQ_COUNT] = {0};
     len = list_question_get_ids(q_head, ids);
+    bubble_sort(ids, len, false);
     if (len == 0)
     {
         WARNING("现在题库中还没有题目");
@@ -816,7 +825,7 @@ void set_time(PaperNode *cur_paper)
  * @brief 菜单功能函数：发布试卷
  * @param cur_paper 正在编辑的试卷结点
  */
-void publish_paper(PaperNode *cur_paper)
+void publish_cur_paper(PaperNode *cur_paper)
 {
     printf(CLS);
     if (cur_paper->total_questions == 0)
@@ -863,6 +872,8 @@ PaperNode *init_cur_paper(char *title, int size, int *cur_id)
     sprintf(new_node->start_time, "%d/%02d/%02d %02d:%02d", 2000, 1, 1, 0, 0);
     sprintf(new_node->end_time, "%d/%02d/%02d %02d:%02d", 2000, 1, 1, 0, 0);
 
+    new_node->published = false;
+
     return new_node;
 }
 
@@ -877,4 +888,239 @@ void add_paper(PaperNode *paper_head, PaperNode *cur_paper)
     list_paper_add(paper_head, cur_paper->id, cur_paper->title,
                    cur_paper->question_ids, cur_paper->question_scores, cur_paper->total_questions, cur_paper->paper_score,
                    cur_paper->start_time, cur_paper->end_time, cur_paper->published);
+}
+
+/**
+ * @brief 菜单功能函数：浏览试卷
+ * @param question_head 试题数据链表
+ * @param cur_paper 要浏览的试卷的结点
+ */
+void browse_cur_paper(QuestionNode *question_head, PaperNode *cur_paper)
+{
+    printf(CLS);
+    // 显示标题
+    printf(CYAN BOLD "%s\n" RESET, cur_paper->title);
+
+    // 显示考试时间
+    printf(GREEN BOLD "考试时间：%s - %s\n" RESET, cur_paper->start_time, cur_paper->end_time);
+
+    // 显示试卷分值
+    printf(YELLOW BOLD "试卷总分：%d\n" RESET, cur_paper->paper_score);
+    print_enter;
+
+    // 显示题号 + 分值 + 题目
+    for (int i = 0; i < cur_paper->total_questions; i++)
+    {
+        QuestionNode *cur_question = list_question_search(question_head, cur_paper->question_ids[i]);
+        if (cur_question == NULL)
+        {
+            printf("第 %d 题不存在或已被删除\n\n", i + 1);
+            continue;
+        }
+        printf("%d.（%d 分）\n", i + 1, cur_paper->question_scores[i]);
+        printf("%s\n", cur_question->question);
+        // 显示选项
+        for (int j = 0; j < 4; j++)
+            printf("%c. %s\n", 'A' + j, cur_question->option[j]);
+        // 显示答案
+        printf("答案：%c\n", cur_question->answer);
+        print_enter;
+    }
+
+    while (1)
+    {
+        int key = get_keyboard_input();
+        if (key == 'q')
+            return;
+    }
+}
+
+/**
+ * @brief 菜单功能辅助函数：打印所有试卷的标题
+ * @param head 试卷数据链表
+ * @param selection 要突出显示的试卷的索引
+ */
+void draw_all_paper_title(PaperNode *paper_head, int *paper_ids, int len, int selection, bool show_published)
+{
+    PaperNode *cur_paper;
+    for (int i = 0; i < len; i++)
+    {
+        cur_paper = list_paper_search(paper_head, paper_ids[i]);
+
+        if (i == selection)
+            printf(BG_WHITE BLACK "> %d.(id: %d) %s <" RESET, i + 1, cur_paper->id, cur_paper->title);
+        else
+            printf("%d.(id: %d) %s", i + 1, cur_paper->id, cur_paper->title);
+        if (show_published)
+        {
+            if (cur_paper->published)
+                printf(GREEN "  已发布" RESET);
+            else
+                printf(RED "  未发布" RESET);
+        }
+        print_enter;
+    }
+}
+
+/**
+ * @brief 菜单功能函数：浏览所有已有试卷
+ * @param head 试卷数据链表
+ */
+void browse_paper(PaperNode *paper_head, QuestionNode *question_head)
+{
+    if (paper_head->next == NULL)
+    {
+        printf(CLS);
+        ERR("还没有试卷");
+        usleep(WAITING_TIME);
+        return;
+    }
+    int selection = 0;
+    int key;
+    int len = 0;
+    int paper_ids[MAX_PAPER_COUNT];
+    len = list_paper_get_ids(paper_head, paper_ids);
+    bubble_sort(paper_ids, len, false);
+
+    while (1)
+    {
+        printf(CLS);
+        draw_all_paper_title(paper_head, paper_ids, len, selection, false);
+        key = get_keyboard_input();
+        if (key == 'q')
+            break;
+        else if (key == KEY_DOWN)
+            selection = (selection + 1) % len;
+        else if (key == KEY_UP)
+            selection = (selection - 1 + len) % len;
+        else if (key == KEY_ENTER)
+        {
+            PaperNode *cur_paper = list_paper_search(paper_head, paper_ids[selection]);
+            if (cur_paper != NULL)
+                browse_cur_paper(question_head, cur_paper);
+        }
+    }
+}
+
+/**
+ * @brief 菜单功能函数：删除试卷
+ * @param head 试卷数据链表
+ */
+void delete_paper(PaperNode *head)
+{
+    if (head->next == NULL)
+    {
+        printf(CLS);
+        ERR("还没有试卷");
+        usleep(WAITING_TIME);
+        return;
+    }
+    int selection = 0;
+    int key;
+    int len = 0;
+    int paper_ids[MAX_PAPER_COUNT];
+
+    while (1)
+    {
+        len = list_paper_get_ids(head, paper_ids);
+        bubble_sort(paper_ids, len, false);
+        printf(CLS);
+        draw_all_paper_title(head, paper_ids, len, selection, false);
+        key = get_keyboard_input();
+        if (key == 'q')
+            break;
+        else if (key == KEY_DOWN)
+            selection = (selection + 1) % len;
+        else if (key == KEY_UP)
+            selection = (selection - 1 + len) % len;
+        else if (key == KEY_ENTER)
+        {
+            list_paper_delete(head, paper_ids[selection]);
+            if (selection == len - 1 && selection >= 1)
+                selection--;
+        }
+    }
+}
+
+/**
+ * @brief 菜单功能函数：发布试卷
+ * @param head 试卷数据链表
+ */
+void publish_paper(PaperNode *head)
+{
+    if (head->next == NULL)
+    {
+        printf(CLS);
+        ERR("还没有试卷");
+        usleep(WAITING_TIME);
+        return;
+    }
+    int selection = 0;
+    int key;
+    int len = 0;
+    int paper_ids[MAX_PAPER_COUNT];
+
+    while (1)
+    {
+        len = list_paper_get_ids(head, paper_ids);
+        bubble_sort(paper_ids, len, false);
+        printf(CLS);
+        draw_all_paper_title(head, paper_ids, len, selection, true);
+        key = get_keyboard_input();
+        if (key == 'q')
+            break;
+        else if (key == KEY_DOWN)
+            selection = (selection + 1) % len;
+        else if (key == KEY_UP)
+            selection = (selection - 1 + len) % len;
+        else if (key == KEY_ENTER)
+        {
+            PaperNode *cur_paper = list_paper_search(head, paper_ids[selection]);
+            if (cur_paper->published)
+                publish_cur_paper(cur_paper);
+            else
+                publish_cur_paper(cur_paper);
+        }
+    }
+}
+
+/**
+ * @brief 菜单功能函数：获取要编辑的试卷结点
+ * @param head 试卷数据链表
+ * @return 返回要编辑的试卷结点
+ */
+PaperNode *get_edit_paper(PaperNode *head)
+{
+    if (head->next == NULL)
+    {
+        printf(CLS);
+        ERR("还没有试卷");
+        usleep(WAITING_TIME);
+        return NULL;
+    }
+    int selection = 0;
+    int key;
+    int len = 0;
+    int paper_ids[MAX_PAPER_COUNT];
+
+    while (1)
+    {
+        len = list_paper_get_ids(head, paper_ids);
+        bubble_sort(paper_ids, len, false);
+        printf(CLS);
+        draw_all_paper_title(head, paper_ids, len, selection, true);
+        key = get_keyboard_input();
+        if (key == 'q')
+            break;
+        else if (key == KEY_DOWN)
+            selection = (selection + 1) % len;
+        else if (key == KEY_UP)
+            selection = (selection - 1 + len) % len;
+        else if (key == KEY_ENTER)
+        {
+            PaperNode *cur_paper = list_paper_search(head, paper_ids[selection]);
+            return cur_paper;
+        }
+    }
+    return NULL;
 }
