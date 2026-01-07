@@ -108,7 +108,7 @@ void add_stu(UserNode *head, int *cur_id)
             usleep(WAITING_TIME);
             continue;
         }
-        bool ok = list_user_add(head, *cur_id, account, password);
+        bool ok = list_user_add(head, *cur_id, account, password, 0);
         if (!ok)
             ERR("添加学生失败");
         else
@@ -810,11 +810,20 @@ void set_time(PaperNode *cur_paper)
         printf("请输入开始考试的时间（格式为：YYYY/MM/DD HH/MM）");
     }
 
-    printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH/MM）");
-    while (!get_date_input(end_time))
+    while (1)
     {
-        ERR("输入的日期格式错误");
         printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH/MM）");
+        while (!get_date_input(end_time))
+        {
+            ERR("输入的日期格式错误");
+            printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH/MM）");
+        }
+        if (date_compare(start_time, end_time) <= 0)
+        {
+            ERR("起始时间必须早于结束时间");
+            continue;
+        }
+        break;
     }
 
     strcpy(cur_paper->start_time, start_time);

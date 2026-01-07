@@ -134,7 +134,7 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
                 UserNode *cur_stu = user_login(user_head);
                 if (cur_stu != NULL)
                 {
-                    stu_menu(cur_stu, question_head, paper_head);
+                    stu_menu(cur_stu, user_head, question_head, paper_head);
                     printf(CLS HIDE_CURSOR);
                 }
                 else
@@ -182,9 +182,10 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
                 break;
             else if (selection == user_option)
             {
-                admin_manage_stu_menu(user_head, user_id, paper_id, question_id);
+                admin_manage_stu_menu(user_head, paper_head, user_id, paper_id, question_id);
                 printf(CLS HIDE_CURSOR);
             }
+
             else if (selection == paper_option)
             {
                 admin_manage_paper_menu(paper_head, question_head, user_id, paper_id, question_id);
@@ -199,7 +200,7 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
     }
 }
 
-void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
+void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
 {
     const int option_count = 5;
     const int add_option = 0, del_option = 1, modify_option = 2, search_option = 3, exit_option = 4;
@@ -220,7 +221,7 @@ void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, i
 
     while (1)
     {
-        user_count = list_user_get_len(head);
+        user_count = list_user_get_len(user_head);
         sprintf(buffer, "系统中有 %d 位学生的信息", user_count);
         prompt.content = buffer;
         prompt.length = 22 + get_digit_count(user_count);
@@ -237,19 +238,19 @@ void admin_manage_stu_menu(UserNode *head, int *cur_stu_id, int *cur_paper_id, i
                 break;
             if (selection == add_option)
             {
-                add_stu(head, cur_stu_id);
-                save_user_data(head);
+                add_stu(user_head, cur_stu_id);
+                save_user_data(user_head, paper_head);
                 save_ids(*cur_stu_id, *cur_paper_id, *cur_question_id);
             }
             else if (selection == del_option)
             {
-                del_stu(head);
-                save_user_data(head);
+                del_stu(user_head);
+                save_user_data(user_head, paper_head);
             }
             else if (selection == modify_option)
             {
-                modify_stu(head);
-                save_user_data(head);
+                modify_stu(user_head);
+                save_user_data(user_head, paper_head);
             }
             else if (selection == search_option)
             {
@@ -483,7 +484,7 @@ void admin_manage_question_menu(QuestionNode *question_head, PaperNode *paper_he
     }
 }
 
-void stu_menu(UserNode *cur_stu, QuestionNode *question_head, PaperNode *paper_head)
+void stu_menu(UserNode *cur_stu, UserNode *user_head, QuestionNode *question_head, PaperNode *paper_head)
 {
     const int option_count = 4;
     const int exercise_option = 0, exam_option = 1, password_option = 2, exit_option = 3;
@@ -515,6 +516,17 @@ void stu_menu(UserNode *cur_stu, QuestionNode *question_head, PaperNode *paper_h
             {
                 printf(SHOW_CURSOR);
                 modify_password(cur_stu);
+            }
+            else if (selection == exercise_option)
+            {
+                printf(SHOW_CURSOR);
+                exercise(cur_stu, question_head);
+                save_user_data(user_head, paper_head);
+            }
+            else if (selection == exam_option)
+            {
+                printf(HIDE_CURSOR);
+                exam(cur_stu, paper_head, question_head);
             }
         }
         printf(CLS HIDE_CURSOR);

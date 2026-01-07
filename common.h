@@ -25,7 +25,8 @@
 #define PAPERDATAPATH "./data/papers.dat" // 本地保存试卷的位置
 
 // 用户相关常量
-#define USERDATAPATH "./data/users.dat" // 本地存储用户信息的位置
+#define USERDATAPATH "./data/users.dat"     // 本地存储用户信息的位置
+#define EXAMRECORDPATH "./data/records.csv" // 保存用户做题记录的位置
 
 // 菜单相关
 #define MENU_WIDTH 60            // 菜单的宽度
@@ -70,12 +71,24 @@ typedef struct PaperNode
     struct PaperNode *next;
 } PaperNode;
 
+typedef struct ExamRecord
+{
+    int paper_id;                     // 试卷 id
+    int score;                        // 用户的得分
+    bool is_finished;                 // 用户是否交卷
+    char start_time[TIMELEN + 1];     // 用户的起始做题时间
+    char end_time[TIMELEN + 1];       // 用户交卷的时间
+    int choices[MAX_PAPER_QUESTIONS]; // 用户的答案，-1 表示未作答
+    struct ExamRecord *next;
+} ExamRecord;
+
 typedef struct UserNode
 {
     int id;                            // 用户唯一标识
     char account[MAX_ACCOUNT_LEN + 1]; // 用户的账号
     char password[MAX_PWD_LEN + 1];    // 用户的密码
     int exercised_question_count;      // 练习题量
+    ExamRecord *exam_record_head;      // 用户的考试记录数据链表的头结点
     struct UserNode *next;
 } UserNode;
 

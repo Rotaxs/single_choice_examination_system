@@ -122,15 +122,18 @@ void get_n_random_from_arr(int *src, int len, int *dst, int n);
 Date get_date();
 bool is_valid_date(char *str);
 Date str_to_date(char *str);
+int date_compare(char *str1, char *str2);
+void date_to_str(Date date, char *str);
 
 // 用户数据 链表操作
 UserNode *list_user_create();
 bool list_user_is_reduplicate(UserNode *head, char *account);
-bool list_user_add(UserNode *head, int id, char *account, char *password);
+bool list_user_add(UserNode *head, int id, char *account, char *password, int exercised_question_count);
 void list_user_print(UserNode *head);
 bool list_user_modify(UserNode *head, int target_id, char *account, char *password);
 bool list_user_delete(UserNode *head, int target_id);
 UserNode *list_user_search(UserNode *head, char *account);
+UserNode *list_user_search_by_id(UserNode *head, int id);
 void list_user_destroy(UserNode *head);
 int list_user_get_len(UserNode *head);
 bool id_in_paper(int id, PaperNode *head);
@@ -163,5 +166,9 @@ PaperNode *list_paper_search(PaperNode *head, int id);
 void list_paper_destroy(PaperNode *head);
 int list_paper_get_len(PaperNode *head);
 int list_paper_get_ids(PaperNode *head, int *ids);
+int list_paper_get_published(PaperNode *head, int *ids, int ids_len);
+
+// 做题记录的链表操作
+ExamRecord *list_examRecord_add(ExamRecord *head, int paper_id, int score, bool is_finished, char *start_time, char *end_time, int *choices);
 
 #endif

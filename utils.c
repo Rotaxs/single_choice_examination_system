@@ -30,6 +30,7 @@ void flush_buffer()
  */
 int get_keyboard_input()
 {
+    // 非阻塞输入
     int ch = getch();
     if (ch == KEY_GUIDE)
     {
@@ -503,6 +504,63 @@ Date str_to_date(char *str)
 }
 
 /**
+ * @brief 将日期结构体转化为字符串的格式
+ * @param date 日期结构体
+ * @param str 最终的字符串，要求长度为 TIMELEN
+ */
+void date_to_str(Date date, char *str)
+{
+    sprintf(str, "%d/%02d/%02d %02d:%02d", date.year, date.month, date.day, date.hour, date.minute);
+}
+
+/**
+ * @brief 比较两个时间的先后
+ * @param str1 第一个时间
+ * @param str2 第二个时间
+ * @return 如果 str1 早于 str2，返回 1，如果 str1 等于 str2，返回 0，如果 str1 晚于 str2，返回 -1，如果格式不正确，返回 2
+ */
+int date_compare(char *str1, char *str2)
+{
+    if (!is_valid_date(str1) || !is_valid_date(str2))
+        return 2;
+    int res = strcmp(str1, str2);
+    if (res < 0)
+        return 1;
+    if (res > 0)
+        return -1;
+    return 0;
+    // Date date1 = str_to_date(str1);
+    // Date date2 = str_to_date(str2);
+    // // 比较年份
+    // if (date1.year < date2.year)
+    //     return 1;
+    // else if (date1.year > date2.year)
+    //     return -1;
+    // // 年份相等，比较月份
+    // if (date1.month < date2.month)
+    //     return 1;
+    // else if (date1.month > date2.month)
+    //     return -1;
+    // // 月份也相等，比较天
+    // if (date1.day < date2.day)
+    //     return 1;
+    // else if (date1.day > date2.day)
+    //     return -1;
+    // // 天相等，比较时
+    // if (date1.hour < date2.hour)
+    //     return 1;
+    // else if (date1.hour > date2.hour)
+    //     return -1;
+    // // 时相等，比较分
+    // if (date1.minute < date2.minute)
+    //     return 1;
+    // else if (date1.minute > date2.minute)
+    //     return -1;
+    // // 分也相等，说明时间相等
+    // return 0;
+}
+
+/**
  * @brief 冒泡排序，默认升序
  * @param arr 要排序的数据
  * @param len 数组的长度
@@ -551,15 +609,17 @@ bool list_user_is_reduplicate(UserNode *head, char *account)
     return false;
 }
 
-bool list_user_add(UserNode *head, int id, char *account, char *password)
+bool list_user_add(UserNode *head, int id, char *account, char *password, int exercised_question_count)
 {
     if (list_user_is_reduplicate(head, account))
         return false;
     UserNode *user_node = (UserNode *)malloc(sizeof(UserNode));
     user_node->id = id;
-    user_node->exercised_question_count = 0;
     strcpy(user_node->account, account);
     strcpy(user_node->password, password);
+    user_node->exercised_question_count = exercised_question_count;
+    user_node->exam_record_head = (ExamRecord *)malloc(sizeof(ExamRecord));
+    user_node->exam_record_head->next = NULL;
     user_node->next = head->next;
     head->next = user_node;
     return true;
@@ -601,9 +661,17 @@ void list_user_destroy(UserNode *head)
     UserNode *cur = head;
     while (cur != NULL)
     {
-        UserNode *next = cur->next;
+        UserNode *next_user = cur->next;
+        // 释放该用户的做题记录记录
+        ExamRecord *cur_rec = cur->exam_record_head;
+        while (cur_rec != NULL)
+        {
+            ExamRecord *next_rec = cur_rec->next;
+            free(cur_rec);
+            cur_rec = next_rec;
+        }
         free(cur);
-        cur = next;
+        cur = next_user;
     }
 }
 
@@ -613,6 +681,17 @@ UserNode *list_user_search(UserNode *head, char *account)
     for (; cur_node; cur_node = cur_node->next)
     {
         if (strcmp(cur_node->account, account) == 0)
+            return cur_node;
+    }
+    return NULL;
+}
+
+UserNode *list_user_search_by_id(UserNode *head, int id)
+{
+    UserNode *cur_node = head->next;
+    for (; cur_node; cur_node = cur_node->next)
+    {
+        if (cur_node->id == id)
             return cur_node;
     }
     return NULL;
@@ -887,4 +966,35 @@ int list_paper_get_ids(PaperNode *head, int *ids)
     for (; node; node = node->next)
         ids[len++] = node->id;
     return len;
+}
+
+int list_paper_get_published(PaperNode *head, int *ids, int ids_len)
+{
+    PaperNode *cur_paper = head->next;
+    int len = 0;
+    for (; cur_paper; cur_paper = cur_paper->next)
+    {
+        if (cur_paper->published)
+        {
+            if (len < ids_len)
+                ids[len++] = cur_paper->id;
+        }
+    }
+    return len;
+}
+
+// ===================== 用户考试记录链表操作 ======================
+
+ExamRecord *list_examRecord_add(ExamRecord *head, int paper_id, int score, bool is_finished, char *start_time, char *end_time, int *choices)
+{
+    ExamRecord *new_node = (ExamRecord *)malloc(sizeof(ExamRecord));
+    new_node->paper_id = paper_id;
+    new_node->score = score;
+    new_node->is_finished = is_finished;
+    strcpy(new_node->start_time, start_time);
+    strcpy(new_node->end_time, end_time);
+    memcpy(new_node->choices, choices, sizeof(int) * MAX_PAPER_QUESTIONS);
+    new_node->next = head->next;
+    head->next = new_node;
+    return new_node;
 }

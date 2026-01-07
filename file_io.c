@@ -3,24 +3,131 @@
 #include "utils.h"
 
 /**
+ * @brief 保存用户考试的数据
+ * @param user_head 用户数据链表
+ * @param paper_head 试卷数据链表
+ */
+bool save_exam_records(UserNode *user_head, PaperNode *paper_head)
+{
+    FILE *fp = fopen(EXAMRECORDPATH, "w");
+    if (fp == NULL)
+    {
+        ERR("打开考试记录文件失败");
+        return false;
+    }
+    UserNode *cur_stu = user_head->next;
+    for (; cur_stu; cur_stu = cur_stu->next)
+    {
+        ExamRecord *cur_record = cur_stu->exam_record_head->next;
+        for (; cur_record; cur_record = cur_record->next)
+        {
+            // 学生 id, 试卷 id，学生得分，是否交卷，开始考试的时间，结束考试的时间
+            fprintf(fp, "%d,%d,%d,%d,%s,%s,", cur_stu->id, cur_record->paper_id,
+                    cur_record->score, cur_record->is_finished, cur_record->start_time, cur_record->end_time);
+            PaperNode *cur_paper = list_paper_search(paper_head, cur_record->paper_id);
+            if (cur_paper != NULL)
+            {
+                for (int i = 0; i < cur_paper->total_questions; i++)
+                {
+                    fprintf(fp, "%d", cur_record->choices[i]);
+                    if (i != cur_paper->total_questions - 1)
+                        fprintf(fp, ";");
+                }
+            }
+            else
+            {
+                fprintf(fp, "NONE");
+            }
+            fprintf(fp, "\n");
+        }
+    }
+    fclose(fp);
+    return true;
+}
+
+/**
+ * @brief 读取用户考试数据
+ * @param user_head 用户数据链表
+ * @param paper_head 试卷数据链表
+ */
+bool load_exam_records(UserNode *user_head, PaperNode *paper_head)
+{
+    FILE *fp = fopen(EXAMRECORDPATH, "r");
+    if (fp == NULL)
+        return save_exam_records(user_head, paper_head);
+    UserNode *cur_user = user_head->next;
+    char line[1024];
+    while (fgets(line, sizeof(line), fp))
+    {
+        int user_id, paper_id, score;
+        int finished;
+        char start_time[TIMELEN + 1], end_time[TIMELEN + 1];
+        char choices[MAX_PAPER_QUESTIONS * 4];
+        // 学生 id，试卷 id，学生得分，是否交卷，开始考试的时间，结束考试的时间，用户的选择
+        if (sscanf(line, "%d,%d,%d,%d,%[^,],%[^,],%s", &user_id, &paper_id, &score, &finished, start_time, end_time, choices) == 7)
+        {
+            // 初始化结点
+            ExamRecord *new_record = (ExamRecord *)malloc(sizeof(ExamRecord));
+            new_record->paper_id = paper_id;
+            new_record->score = score;
+            new_record->is_finished = (bool)finished;
+            strcpy(new_record->start_time, start_time);
+            strcpy(new_record->end_time, end_time);
+            new_record->next = NULL;
+            PaperNode *cur_paper = list_paper_search(paper_head, paper_id);
+
+            // 处理 choices 数组
+            if (strcmp(choices, "NONE") != 0)
+            {
+                char *p = strtok(choices, ";");
+                int i = 0;
+                while (p != NULL && i < MAXQ_COUNT)
+                {
+                    new_record->choices[i++] = atoi(p);
+                    p = strtok(NULL, ";");
+                }
+            }
+
+            // 将做题记录头插至用户做题记录链表
+            UserNode *target_user = list_user_search_by_id(user_head, user_id);
+            if (target_user)
+            {
+                new_record->next = target_user->exam_record_head->next;
+                target_user->exam_record_head->next = new_record;
+            }
+            else
+            {
+                ERR("读取用户做题记录时发生错误");
+                usleep(WAITING_TIME);
+                free(new_record);
+            }
+        }
+    }
+
+    fclose(fp);
+    return true;
+}
+
+/**
  * @brief 文件 I/O 函数：保存用户链表中的数据到文件
  * @param head 用户链表的头指针
  * @return 如果保存成功，返回 true，否则返回 false
  */
-bool save_user_data(UserNode *head)
+bool save_user_data(UserNode *user_head, PaperNode *paper_head)
 {
     FILE *fp = fopen(USERDATAPATH, "wb");
     if (fp == NULL)
     {
-        printf(RED BOLD "Error: 打开用户数据文件失败\n" RESET);
+        ERR("打开用户数据文件失败");
         return false;
     }
 
-    UserNode *cur_node = head->next;
+    UserNode *cur_node = user_head->next;
+    int data_size = sizeof(UserNode) - sizeof(UserNode *) - sizeof(ExamRecord *);
     for (; cur_node; cur_node = cur_node->next)
     {
         cipher(cur_node->password);
-        int ok = fwrite(cur_node, sizeof(UserNode) - sizeof(UserNode *), 1, fp);
+        int ok = fwrite(cur_node, data_size, 1, fp);
         cipher(cur_node->password);
         if (ok != 1)
         {
@@ -29,6 +136,7 @@ bool save_user_data(UserNode *head)
             return false;
         }
     }
+    save_exam_records(user_head, paper_head);
 
     fclose(fp);
     return true;
@@ -39,20 +147,23 @@ bool save_user_data(UserNode *head)
  * @param head 用户链表的头指针
  * @return 读取成功返回 true，否则返回 false
  */
-bool load_user_data(UserNode *head)
+bool load_user_data(UserNode *user_head, PaperNode *paper_head)
 {
     FILE *fp = fopen(USERDATAPATH, "rb");
     if (fp == NULL)
-        return save_user_data(head);
-
+        return save_user_data(user_head, paper_head);
+    // 后面释放内存时不加这行会有段错误
+    user_head->exam_record_head = NULL;
+    // user_head->exam_record_head = (ExamRecord *)malloc(sizeof(ExamRecord));
+    // user_head->exam_record_head->next = NULL;
     UserNode user_data;
-
-    while (fread(&user_data, sizeof(UserNode) - sizeof(UserNode *), 1, fp))
+    int data_size = sizeof(UserNode) - sizeof(UserNode *) - sizeof(ExamRecord *);
+    while (fread(&user_data, data_size, 1, fp))
     {
         cipher(user_data.password);
-        list_user_add(head, user_data.id, user_data.account, user_data.password);
+        list_user_add(user_head, user_data.id, user_data.account, user_data.password, user_data.exercised_question_count);
     }
-
+    load_exam_records(user_head, paper_head);
     fclose(fp);
     return true;
 }

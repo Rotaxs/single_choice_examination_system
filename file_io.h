@@ -4,8 +4,8 @@
 // #include <stdbool.h>
 #include "common.h"
 
-bool save_user_data(UserNode *head);
-bool load_user_data(UserNode *head);
+bool save_user_data(UserNode *user_head, PaperNode *paper_head);
+bool load_user_data(UserNode *user_head, PaperNode *paper_head);
 bool save_question_data(QuestionNode *head);
 bool load_question_data(QuestionNode *head);
 bool save_paper_data(PaperNode *head);
