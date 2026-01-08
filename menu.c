@@ -154,14 +154,15 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
 void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *question_head,
                 int *user_id, int *paper_id, int *question_id)
 {
-    const int option_count = 4;
-    const int question_option = 0, user_option = 1, paper_option = 2, exit_option = 3;
+    const int option_count = 5;
+    const int question_option = 0, user_option = 1, paper_option = 2, password_option = 3, exit_option = 4;
     const Text title = {"管理员操作界面", 14};
     const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
     Text options[] = {
         {"1. 试题管理", 11},
         {"2. 用户管理", 11},
         {"3. 试卷管理", 11},
+        {"4. 修改密码", 11},
         {"0. 返回主菜单", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -183,19 +184,21 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
             else if (selection == user_option)
             {
                 admin_manage_stu_menu(user_head, paper_head, user_id, paper_id, question_id);
-                printf(CLS HIDE_CURSOR);
             }
-
             else if (selection == paper_option)
             {
                 admin_manage_paper_menu(paper_head, question_head, user_id, paper_id, question_id);
-                printf(CLS HIDE_CURSOR);
             }
             else if (selection == question_option)
             {
                 admin_manage_question_menu(question_head, paper_head, user_id, paper_id, question_id);
-                printf(CLS HIDE_CURSOR);
             }
+            else if (selection == password_option)
+            {
+                printf(SHOW_CURSOR);
+                modify_admin_password();
+            }
+            printf(CLS HIDE_CURSOR);
         }
     }
 }
@@ -254,6 +257,8 @@ void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_
             }
             else if (selection == search_option)
             {
+                printf(CLS);
+                show_stu_exercise_and_exam_info(user_head);
             }
             printf(CLS HIDE_CURSOR);
         }
@@ -527,6 +532,7 @@ void stu_menu(UserNode *cur_stu, UserNode *user_head, QuestionNode *question_hea
             {
                 printf(HIDE_CURSOR);
                 exam(cur_stu, paper_head, question_head);
+                save_user_data(user_head, paper_head);
             }
         }
         printf(CLS HIDE_CURSOR);

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "common.h"
 
+void modify_admin_password();
 bool admin_login();
 void add_stu(UserNode *head, int *cur_id);
 void del_stu(UserNode *head);
@@ -13,6 +14,7 @@ void del_question(QuestionNode *question_head, PaperNode *paper_head);
 void modify_question(QuestionNode *head);
 void browse_question(QuestionNode *head);
 void search_question(QuestionNode *head);
+void show_stu_exercise_and_exam_info(UserNode *user_head);
 
 PaperNode *init_cur_paper(char *title, int size, int *cur_id);
 void add_paper(PaperNode *paper_head, PaperNode *cur_paper);

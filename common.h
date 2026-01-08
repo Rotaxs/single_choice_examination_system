@@ -34,13 +34,14 @@
 #define MENU_TITLE_COLOR CYAN    // 菜单标题的颜色
 
 // 账号与密码
-#define ENCRYPT_KEY 66        // 密钥
-#define ADMIN_PWD "123456789" // 管理员密码
-#define MAX_ACCOUNT_LEN 20    // 账号的最大长度
-#define MIN_ACCOUNT_LEN 6     // 账号的最小长度
-#define MAX_PWD_LEN 20        // 密码的最大长度
-#define MIN_PWD_LEN 6         // 密码的最小长度
-#define PWD_ATTEMP_COUNT 5    // 密码尝试次数
+#define ENCRYPT_KEY 66                     // 密钥
+#define ADMIN_ORIGIN_PWD "123456789"       // 管理员密码
+#define ADMIN_PWD_PATH "./data/.admin.dat" // 管理员密码保存路径
+#define MAX_ACCOUNT_LEN 20                 // 账号的最大长度
+#define MIN_ACCOUNT_LEN 6                  // 账号的最小长度
+#define MAX_PWD_LEN 20                     // 密码的最大长度
+#define MIN_PWD_LEN 6                      // 密码的最小长度
+#define PWD_ATTEMP_COUNT 5                 // 密码尝试次数
 
 #define IDS_PATH "./data/ids.dat"
 

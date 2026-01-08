@@ -3,7 +3,8 @@
 
 // #include <stdbool.h>
 #include "common.h"
-
+bool save_admin_password(char *admin_pwd);
+bool load_admin_password(char *admin_pwd);
 bool save_user_data(UserNode *user_head, PaperNode *paper_head);
 bool load_user_data(UserNode *user_head, PaperNode *paper_head);
 bool save_question_data(QuestionNode *head);

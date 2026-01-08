@@ -458,6 +458,7 @@ PaperNode *choose_paper(PaperNode *paper_head)
     len = list_paper_get_published(paper_head, ids, MAX_PAPER_COUNT);
     if (len == 0)
     {
+        printf(CLS);
         ERR("现在还没有发布的试卷");
         usleep(WAITING_TIME);
         return NULL;
@@ -534,7 +535,7 @@ void calc_getted_scores(PaperNode *cur_paper, QuestionNode *question_head, ExamR
 }
 
 /**
- * @brief 菜单功能辅助函数：正式的考试
+ * @brief 菜单功能辅助函数：开始考试
  * @param cur_paper 考试的试卷
  * @param question_head 题目数据的链表
  * @param cur_record 要编辑的记录
@@ -542,8 +543,6 @@ void calc_getted_scores(PaperNode *cur_paper, QuestionNode *question_head, ExamR
  */
 void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *cur_record, int index)
 {
-    // TODO 做题超时
-    // TODO 保存做题记录到文件
     int key;
     int selection = 0;
 
@@ -594,10 +593,25 @@ void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *c
         else if (key == KEY_ENTER)
         {
             cur_record->choices[index] = selection;
+            Date date = get_date();
+            char cur_date[TIMELEN + 1];
+            date_to_str(date, cur_date);
+            if (date_compare(cur_date, cur_paper->end_time) <= 0)
+            {
+                WARNING("考试结束时间已到，请停止作答");
+                WAITING("正在退出考试界面...");
+                return;
+            }
         }
     }
 }
 
+/**
+ * @brief 浏览完成或结束的试卷
+ * @param cur_paper 当前考试的试卷
+ * @param cur_record 当前学生的考试记录
+ * @param question_head 试题数据链表
+ */
 void browse_exam_paper(PaperNode *cur_paper, ExamRecord *cur_record, QuestionNode *question_head)
 {
     QuestionNode *cur_question;
@@ -651,6 +665,12 @@ void browse_exam_paper(PaperNode *cur_paper, ExamRecord *cur_record, QuestionNod
     }
 }
 
+/**
+ * @brief 菜单功能函数：考试
+ * @param cur_user 考试的学生
+ * @param paper_head 试卷数据链表
+ * @param question_head 试题数据链表
+ */
 void exam(UserNode *cur_user, PaperNode *paper_head, QuestionNode *question_head)
 {
     int key, index;

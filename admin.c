@@ -1,6 +1,68 @@
 #include "admin.h"
 #include "common.h"
 #include "utils.h"
+#include "file_io.h"
+
+/**
+ * @brief 菜单功能函数：修改管理员密码
+ */
+void modify_admin_password()
+{
+    char input_previous_password[MAX_PWD_LEN + 1];
+    char first_changed_password[MAX_PWD_LEN + 1];
+    char second_changed_password[MAX_PWD_LEN + 1];
+    char admin_pwd[MAX_PWD_LEN + 1];
+    load_admin_password(admin_pwd);
+    bool is_valid;
+
+    while (1)
+    {
+        printf(CLS);
+        printf("请输入原密码：");
+        get_password_input(input_previous_password, MAX_PWD_LEN + 1);
+        print_enter;
+        if (strcmp(input_previous_password, "q") == 0)
+        {
+            WAITING("正在返回到管理员操作界面...");
+            return;
+        }
+        if (strcmp(input_previous_password, admin_pwd) != 0)
+        {
+            ERR("密码错误");
+            usleep(WAITING_TIME);
+            continue;
+        }
+        while (1)
+        {
+            printf(CLS);
+            printf("请输入新密码：");
+            is_valid = get_password_input(first_changed_password, MAX_PWD_LEN + 1);
+            print_enter;
+            if (!is_valid)
+            {
+                WARNING("密码过短，请重新输入");
+                usleep(WAITING_TIME);
+                continue;
+            }
+            printf("再次输入新密码：");
+            get_password_input(second_changed_password, MAX_PWD_LEN + 1);
+            print_enter;
+            if (strcmp(first_changed_password, second_changed_password) == 0)
+            {
+                strcpy(admin_pwd, first_changed_password);
+                save_admin_password(admin_pwd);
+                INFO("修改成功");
+                WAITING("正在返回到管理员操作界面");
+                return;
+            }
+            else
+            {
+                ERR("两次密码不一致，请重新输入");
+                usleep(WAITING_TIME);
+            }
+        }
+    }
+}
 
 /**
  * @brief 菜单功能函数：管理员登录
@@ -43,7 +105,9 @@ bool admin_login()
         WAITING("正在进行登录检测...");
 
         // 密码正确
-        if (strcmp(input_pwd, ADMIN_PWD) == 0)
+        char admin_pwd[MAX_PWD_LEN + 1];
+        load_admin_password(admin_pwd);
+        if (strcmp(input_pwd, admin_pwd) == 0)
         {
             CURSOR_SHIFT_UP;
             INFO("密码正确                    ");
@@ -224,6 +288,27 @@ void modify_stu(UserNode *head)
     WAITING("正在返回到学生信息管理界面...");
 }
 
+void show_stu_exercise_and_exam_info(UserNode *user_head)
+{
+    UserNode *cur_user = user_head->next;
+    printf("用户名\t练习题量\n");
+    print_table(TABLE_U, MENU_WIDTH);
+    print_enter;
+    print_enter;
+    for (; cur_user; cur_user = cur_user->next)
+    {
+        printf("%s\t%d\n", cur_user->account, cur_user->exercised_question_count);
+    }
+    print_enter;
+    print_table(TABLE_B, MENU_WIDTH);
+    while (1)
+    {
+        int key = get_keyboard_input();
+        if (key == 'q')
+            break;
+    }
+}
+
 // ================================== 试题管理 ==================================
 
 /**
@@ -304,6 +389,8 @@ void del_question(QuestionNode *question_head, PaperNode *paper_head)
             ERR("请输入正确的 ID");
             printf("请输入要删除的试题的 ID：");
         }
+        if (id == -1)
+            return;
         if (id_in_paper(id, paper_head))
         {
             ERR("不能删除这道题，因为现存的试卷中收录了该题");
@@ -370,6 +457,8 @@ void modify_question(QuestionNode *head)
                 ERR("请输入正确的 ID");
                 printf("请输入要修改的试题的 ID：");
             }
+            if (id == -1)
+                return;
             node = list_question_search(head, id);
             if (node != NULL)
                 break;
@@ -530,11 +619,19 @@ void browse_question(QuestionNode *head)
     printf(CLS);
     QuestionNode *node = head->next;
     int ids[MAXQ_COUNT];
-    int size = 0;
-    for (; node; node = node->next)
-        ids[size++] = node->id;
-    bubble_sort(ids, size, false);
-    display_questions(head, ids, size);
+    // int size = 0;
+    // for (; node; node = node->next)
+    //     ids[size++] = node->id;
+    int len = list_question_get_ids(head, ids);
+    if (len == 0)
+    {
+        printf(CLS);
+        ERR("题库中还没有试题");
+        usleep(WAITING_TIME);
+        return;
+    }
+    bubble_sort(ids, len, false);
+    display_questions(head, ids, len);
 }
 
 /**
@@ -554,6 +651,10 @@ void search_question(QuestionNode *head)
         {
             ERR("分类长度过长，请重新输入");
             printf("请输入要搜索的试题的类别：");
+        }
+        if (strcmp(category, "q") == 0)
+        {
+            break;
         }
         size = list_question_search_by_category(head, category, ids);
         if (size == 0)
@@ -642,7 +743,8 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
     bubble_sort(ids, len, false);
     if (len == 0)
     {
-        WARNING("现在题库中还没有题目");
+        printf(CLS);
+        ERR("现在题库中还没有题目");
         usleep(WAITING_TIME);
         return;
     }

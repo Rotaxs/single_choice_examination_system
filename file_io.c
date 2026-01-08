@@ -3,6 +3,50 @@
 #include "utils.h"
 
 /**
+ * @brief 文件 I/O 函数：保存管理员密码
+ * @param admin_pwd 要保存的密码
+ * @return 保存成功，返回 true，否则返回 false
+ */
+bool save_admin_password(char *admin_pwd)
+{
+    FILE *fp = fopen(ADMIN_PWD_PATH, "wb");
+    if (fp == NULL)
+    {
+        ERR("打开管理员数据文件失败");
+        return false;
+    }
+    cipher(admin_pwd);
+    fwrite(admin_pwd, MAX_PWD_LEN + 1, 1, fp);
+    cipher(admin_pwd);
+    fclose(fp);
+    return true;
+}
+
+/**
+ * @brief 文件 I/O 函数：读取管理员密码
+ * @param admin_pwd 读取后的密码保存的位置
+ * @return 读取成功返回 true，否则返回 false
+ */
+bool load_admin_password(char *admin_pwd)
+{
+    FILE *fp = fopen(ADMIN_PWD_PATH, "rb");
+    if (fp == NULL)
+    {
+        char origin_pwd[MAX_PWD_LEN + 1] = ADMIN_ORIGIN_PWD;
+        strcpy(admin_pwd, origin_pwd);
+        return save_admin_password(origin_pwd);
+    }
+    if (fread(admin_pwd, MAX_PWD_LEN + 1, 1, fp) != 1)
+    {
+        fclose(fp);
+        return false;
+    }
+    cipher(admin_pwd);
+    fclose(fp);
+    return true;
+}
+
+/**
  * @brief 保存用户考试的数据
  * @param user_head 用户数据链表
  * @param paper_head 试卷数据链表
@@ -149,13 +193,11 @@ bool save_user_data(UserNode *user_head, PaperNode *paper_head)
  */
 bool load_user_data(UserNode *user_head, PaperNode *paper_head)
 {
+    // 后面释放内存时不加这行会有段错误
+    user_head->exam_record_head = NULL;
     FILE *fp = fopen(USERDATAPATH, "rb");
     if (fp == NULL)
         return save_user_data(user_head, paper_head);
-    // 后面释放内存时不加这行会有段错误
-    user_head->exam_record_head = NULL;
-    // user_head->exam_record_head = (ExamRecord *)malloc(sizeof(ExamRecord));
-    // user_head->exam_record_head->next = NULL;
     UserNode user_data;
     int data_size = sizeof(UserNode) - sizeof(UserNode *) - sizeof(ExamRecord *);
     while (fread(&user_data, data_size, 1, fp))
