@@ -3,6 +3,8 @@
 #include "file_io.h"
 #include <conio.h>
 #include <time.h>
+#include <wchar.h>
+#include <locale.h>
 
 /**
  * @brief 工具函数：加密与解密
@@ -278,9 +280,10 @@ bool get_score_input(int *score)
  */
 bool get_date_input(char *date)
 {
-    if (fgets(date, 20, stdin) != NULL)
+    if (fgets(date, TIMELEN + 1, stdin) != NULL)
     {
         date[strcspn(date, "\n")] = '\0';
+        flush_buffer();
         return is_valid_date(date);
     }
     return false;
@@ -329,6 +332,48 @@ int get_digit_count(int num)
 }
 
 /**
+ * @brief 获取一个字符串在控制台输出的宽度
+ * @param str 要判断的字符串
+ * @return 字符串输出的宽度
+ */
+int get_str_width(char *s)
+{
+    int width = 0;
+    while (*s)
+    {
+        // ASCLL 0000 0000 -> 01111 1111
+        if ((*s & 0x80) == 0)
+        {
+            width += 1;
+            s += 1;
+        }
+        //  2字节字符： 0xC0 -> 0xDF
+        else if ((*s & 0xE0) == 0xC0)
+        {
+            width += 2;
+            s += 2;
+        }
+        // 3字节字符（汉字） 0xE0 -> 0xEF
+        else if ((*s & 0xF0) == 0xE0)
+        {
+            width += 2;
+            s += 3;
+        }
+        // 4字节字符（Emoji） 0xF0 -> 0xF7
+        else if ((*s & 0xF8) == 0xF0)
+        {
+            width += 2;
+            s += 4;
+        }
+        else
+        {
+            s++;
+        }
+    }
+    return width;
+}
+
+/**
  * @brief 交换两个数的值
  * @param a 第一个数的指针
  * @param b 第二个数的指针
@@ -374,7 +419,7 @@ int randint(int min, int max)
 }
 
 /**
- * @brief 工具函数：（Fhiser-Yates 随机洗牌算法）随机获取一个数组中的 n 个元素
+ * @brief 工具函数：（Fisher-Yates 随机洗牌算法）随机获取一个数组中的 n 个元素
  * @param src 原数组
  * @param len 原数组的长度
  * @param dst 随机数组
@@ -716,6 +761,15 @@ int list_user_get_len(UserNode *head)
     for (; node; node = node->next)
         res++;
     return res;
+}
+
+int list_user_get_ids(UserNode *head, int *ids)
+{
+    int len = 0;
+    UserNode *node = head->next;
+    for (; node; node = node->next)
+        ids[len++] = node->id;
+    return len;
 }
 
 // =================== 试题数据的链表操作 ====================

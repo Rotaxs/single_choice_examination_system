@@ -288,17 +288,23 @@ void modify_stu(UserNode *head)
     WAITING("正在返回到学生信息管理界面...");
 }
 
-void show_stu_exercise_and_exam_info(UserNode *user_head)
+void show_stu_exercise_info(UserNode *user_head)
 {
     UserNode *cur_user = user_head->next;
-    printf("用户名\t练习题量\n");
+    int ids[MAX_USER_COUNT];
+    printf("用户id\t用户名\t练习题量\n");
     print_table(TABLE_U, MENU_WIDTH);
     print_enter;
     print_enter;
-    for (; cur_user; cur_user = cur_user->next)
+
+    int len = list_user_get_ids(user_head, ids);
+    bubble_sort(ids, len, false);
+    for (int i = 0; i < len; i++)
     {
-        printf("%s\t%d\n", cur_user->account, cur_user->exercised_question_count);
+        cur_user = list_user_search_by_id(user_head, ids[i]);
+        printf("%d\t%s\t%d\n", cur_user->id, cur_user->account, cur_user->exercised_question_count);
     }
+
     print_enter;
     print_table(TABLE_B, MENU_WIDTH);
     while (1)
@@ -318,7 +324,7 @@ void show_stu_exercise_and_exam_info(UserNode *user_head)
  */
 void add_question(QuestionNode *head, int *cur_id)
 {
-    bool ok;
+    bool ok, stop;
     char question[QLEN + 1];
     char options[4][OPTIONLEN + 1];
     char answer;
@@ -336,8 +342,15 @@ void add_question(QuestionNode *head, int *cur_id)
                 usleep(WAITING_TIME);
                 continue;
             }
+            if (strlen(question) == 0)
+            {
+                stop = true;
+                break;
+            }
             break;
         }
+        if (stop)
+            break;
         for (int i = 0; i < 4; i++)
         {
             printf("请输入选项 %c: ", 'A' + i);
@@ -383,14 +396,14 @@ void del_question(QuestionNode *question_head, PaperNode *paper_head)
     printf(CLS);
     while (1)
     {
-        printf("请输入要删除的试题的 ID：");
+        printf("请输入要删除的试题的 ID（输入 -1 退出）：");
         while (!get_id_input(&id))
         {
             ERR("请输入正确的 ID");
             printf("请输入要删除的试题的 ID：");
         }
         if (id == -1)
-            return;
+            break;
         if (id_in_paper(id, paper_head))
         {
             ERR("不能删除这道题，因为现存的试卷中收录了该题");
@@ -444,6 +457,7 @@ void print_question_by_id(QuestionNode *head, int id)
 void modify_question(QuestionNode *head)
 {
     int id;
+    bool stop = false;
     while (1)
     {
         printf(CLS);
@@ -451,21 +465,28 @@ void modify_question(QuestionNode *head)
         while (1)
         {
             printf(CLS);
-            printf("请输入要修改的试题的 ID：");
+            printf("请输入要修改的试题的 ID（输入 -1 退出）：");
             while (!get_id_input(&id))
             {
                 ERR("请输入正确的 ID");
-                printf("请输入要修改的试题的 ID：");
+                usleep(WAITING_TIME);
+                printf("请输入要修改的试题的 ID（输入 -1 退出）：");
             }
             if (id == -1)
-                return;
+            {
+                stop = true;
+                break;
+            }
             node = list_question_search(head, id);
             if (node != NULL)
                 break;
             char buffer[45];
             sprintf(buffer, "ID 为 %d 的试题不存在或已被删除", id);
             ERR(buffer);
+            usleep(WAITING_TIME);
         }
+        if (stop)
+            break;
         char changed_question[QLEN + 1];
         char changed_option[4][OPTIONLEN + 1];
         char changed_answer;
@@ -657,6 +678,7 @@ void search_question(QuestionNode *head)
             break;
         }
         size = list_question_search_by_category(head, category, ids);
+        bubble_sort(ids, size, false);
         if (size == 0)
         {
             ERR("没有该类别的题目");
@@ -690,6 +712,8 @@ void display_question_noticed(QuestionNode *q_head, int start_index, int end_ind
 {
     QuestionNode *node;
 
+    CURSOR_RESET;
+
     print_table(TABLE_U, MENU_WIDTH);
     print_enter;
 
@@ -702,10 +726,10 @@ void display_question_noticed(QuestionNode *q_head, int start_index, int end_ind
         if ((i - start_index) == selection)
             printf(BG_WHITE BLACK "> ID: %d <" RESET, node->id);
         else
-            printf("ID: %d", node->id);
+            printf("ID: %d    ", node->id);
         printf("\n状态：");
         if (is_chosen[i])
-            printf(GREEN "选中\n" RESET);
+            printf(GREEN "选中 \n" RESET);
         else
             printf(RED "未选中\n" RESET);
         printf("%s\n", node->question);
@@ -757,12 +781,13 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
         }
     }
 
+    printf(CLS);
     while (!stop)
     {
         end_index = (start_index + ONCE_COUNT > len) ? len : start_index + ONCE_COUNT;
         cur_page_size = end_index - start_index;
 
-        printf(CLS);
+        // printf(CLS);
         display_question_noticed(q_head, start_index, end_index, ids, is_chosen, len, selection);
         printf(YELLOW "[第 %d-%d 题 / 共 %d 题]\n方向键←/→:翻页 ↑/↓:切换题目 Enter:选题/取消选题 q:返回\n" RESET, start_index + 1, end_index, len);
 
@@ -773,6 +798,7 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
                 continue;
             start_index = end_index;
             selection = 0;
+            printf(CLS);
         }
         else if (key == KEY_LEFT)
         {
@@ -780,6 +806,7 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
                 continue;
             start_index -= ONCE_COUNT;
             selection = 0;
+            printf(CLS);
         }
         else if (key == KEY_UP)
         {
@@ -905,20 +932,20 @@ void set_time(PaperNode *cur_paper)
     char start_time[TIMELEN + 1], end_time[TIMELEN + 1];
 
     printf(CLS);
-    printf("请输入开始考试的时间（格式为：YYYY/MM/DD HH/MM）");
+    printf("请输入开始考试的时间（格式为：YYYY/MM/DD HH:MM）");
     while (!get_date_input(start_time))
     {
         ERR("输入的日期格式错误");
-        printf("请输入开始考试的时间（格式为：YYYY/MM/DD HH/MM）");
+        printf("请输入开始考试的时间（格式为：YYYY/MM/DD HH:MM）");
     }
 
     while (1)
     {
-        printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH/MM）");
+        printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH:MM）");
         while (!get_date_input(end_time))
         {
             ERR("输入的日期格式错误");
-            printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH/MM）");
+            printf("请输入结束考试的时间（格式为：YYYY/MM/DD HH:MM）");
         }
         if (date_compare(start_time, end_time) <= 0)
         {
@@ -1057,17 +1084,45 @@ void draw_all_paper_title(PaperNode *paper_head, int *paper_ids, int len, int se
     for (int i = 0; i < len; i++)
     {
         cur_paper = list_paper_search(paper_head, paper_ids[i]);
-
-        if (i == selection)
-            printf(BG_WHITE BLACK "> %d.(id: %d) %s <" RESET, i + 1, cur_paper->id, cur_paper->title);
-        else
-            printf("%d.(id: %d) %s", i + 1, cur_paper->id, cur_paper->title);
         if (show_published)
         {
-            if (cur_paper->published)
-                printf(GREEN "  已发布" RESET);
+            if (i == selection)
+            {
+                if (cur_paper->published)
+                {
+                    printf(BG_WHITE BLACK "> %d.(id: %d " RESET, i + 1, cur_paper->id);
+                    printf(BG_WHITE GREEN "已发布" RESET);
+                    printf(BG_WHITE BLACK ") %s <" RESET, cur_paper->title);
+                }
+                else
+                {
+                    printf(BG_WHITE BLACK "> %d.(id: %d " RESET, i + 1, cur_paper->id);
+                    printf(BG_WHITE RED "未发布" RESET);
+                    printf(BG_WHITE BLACK ") %s <" RESET, cur_paper->title);
+                }
+            }
             else
-                printf(RED "  未发布" RESET);
+            {
+                if (cur_paper->published)
+                {
+                    printf("%d.(id: %d ", i + 1, cur_paper->id);
+                    printf(GREEN "已发布" RESET);
+                    printf(") %s", cur_paper->title);
+                }
+                else
+                {
+                    printf("%d.(id: %d ", i + 1, cur_paper->id);
+                    printf(RED "未发布" RESET);
+                    printf(") %s", cur_paper->title);
+                }
+            }
+        }
+        else
+        {
+            if (i == selection)
+                printf(BG_WHITE BLACK "> %d.(id: %d) %s <" RESET, i + 1, cur_paper->id, cur_paper->title);
+            else
+                printf("%d.(id: %d) %s", i + 1, cur_paper->id, cur_paper->title);
         }
         print_enter;
     }
@@ -1188,7 +1243,10 @@ void publish_paper(PaperNode *head)
         {
             PaperNode *cur_paper = list_paper_search(head, paper_ids[selection]);
             if (cur_paper->published)
-                publish_cur_paper(cur_paper);
+            {
+                continue;
+                // publish_cur_paper(cur_paper);
+            }
             else
                 publish_cur_paper(cur_paper);
         }

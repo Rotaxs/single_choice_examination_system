@@ -118,6 +118,7 @@ bool delete_item_from_array(int *arr, int *len, int item);
 void bubble_sort(int *arr, int len, bool reverse);
 int randint(int min, int max);
 void get_n_random_from_arr(int *src, int len, int *dst, int n);
+int get_str_width(char *str);
 
 Date get_date();
 bool is_valid_date(char *str);
@@ -136,6 +137,8 @@ UserNode *list_user_search(UserNode *head, char *account);
 UserNode *list_user_search_by_id(UserNode *head, int id);
 void list_user_destroy(UserNode *head);
 int list_user_get_len(UserNode *head);
+int list_user_get_ids(UserNode *head, int *ids);
+
 bool id_in_paper(int id, PaperNode *head);
 
 // 试题链表操作

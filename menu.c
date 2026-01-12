@@ -95,7 +95,7 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
     const int option_count = 3; // 选项的个数
     const int admin_option = 0, stu_option = 1, exit_option = 2;
     const Text title = {"标准化选择题考试系统 v1.0", 25};
-    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
+    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认，q/Esc 退出", 41};
     Text options[] = {
         {"1. 管理员登录", 13},
         {"2. 学生登录", 11},
@@ -112,6 +112,8 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -157,7 +159,7 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
     const int option_count = 5;
     const int question_option = 0, user_option = 1, paper_option = 2, password_option = 3, exit_option = 4;
     const Text title = {"管理员操作界面", 14};
-    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
+    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认，q/Esc 退出", 41};
     Text options[] = {
         {"1. 试题管理", 11},
         {"2. 用户管理", 11},
@@ -177,6 +179,8 @@ void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questi
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -216,7 +220,7 @@ void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_
         {"1. 添加用户", 11},
         {"2. 删除用户", 11},
         {"3. 修改用户信息", 15},
-        {"4. 查询用户做题信息", 19},
+        {"4. 浏览用户做题信息", 19},
         {"0. 返回上一级", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -235,6 +239,8 @@ void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -258,7 +264,7 @@ void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_
             else if (selection == search_option)
             {
                 printf(CLS);
-                show_stu_exercise_and_exam_info(user_head);
+                show_stu_exercise_info(user_head);
             }
             printf(CLS HIDE_CURSOR);
         }
@@ -288,7 +294,7 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
     {
         sprintf(buffer, "正在编辑试卷 %s，试卷 ID 为 %d", cur_paper->title, cur_paper->id);
         prompt.content = buffer;
-        prompt.length = 50; // TODO 如何计算宽度
+        prompt.length = 26 + get_digit_count(cur_paper->id) + get_str_width(cur_paper->title);
         draw_menu(title, prompt, selection, options, option_count);
         int key = get_keyboard_input();
 
@@ -296,6 +302,8 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -369,6 +377,8 @@ void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head,
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -447,6 +457,8 @@ void admin_manage_question_menu(QuestionNode *question_head, PaperNode *paper_he
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -494,14 +506,14 @@ void stu_menu(UserNode *cur_stu, UserNode *user_head, QuestionNode *question_hea
     const int option_count = 4;
     const int exercise_option = 0, exam_option = 1, password_option = 2, exit_option = 3;
     const Text title = {"学生操作界面", 12};
-    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认", 29};
+    const Text prompt = {"使用 [↑/↓] 移动，[Enter] 确认，q/Esc 退出", 41};
     Text options[] = {
         {"1. 练习", 7},
         {"2. 考试", 7},
         {"3. 修改密码", 11},
         {"0. 返回主菜单", 13}};
 
-    printf(HIDE_CURSOR CLS);
+    printf(CLS HIDE_CURSOR);
     int selection = 0;
 
     while (1)
@@ -513,6 +525,8 @@ void stu_menu(UserNode *cur_stu, UserNode *user_head, QuestionNode *question_hea
             selection = (selection + 1) % option_count;
         else if (key == KEY_UP)
             selection = (selection - 1 + option_count) % option_count;
+        else if (key == 'q' || key == KEY_ESC)
+            break;
         else if (key == KEY_ENTER)
         {
             if (selection == exit_option)
@@ -521,20 +535,22 @@ void stu_menu(UserNode *cur_stu, UserNode *user_head, QuestionNode *question_hea
             {
                 printf(SHOW_CURSOR);
                 modify_password(cur_stu);
+                printf(HIDE_CURSOR CLS);
             }
             else if (selection == exercise_option)
             {
                 printf(SHOW_CURSOR);
                 exercise(cur_stu, question_head);
                 save_user_data(user_head, paper_head);
+                printf(HIDE_CURSOR CLS);
             }
             else if (selection == exam_option)
             {
                 printf(HIDE_CURSOR);
                 exam(cur_stu, paper_head, question_head);
                 save_user_data(user_head, paper_head);
+                printf(HIDE_CURSOR CLS);
             }
         }
-        printf(CLS HIDE_CURSOR);
     }
 }

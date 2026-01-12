@@ -174,6 +174,8 @@ void print_exercise_question(QuestionNode *question_head, int id, int selection,
 {
     QuestionNode *cur_question = list_question_search(question_head, id);
 
+    CURSOR_RESET;
+
     print_table(TABLE_U, MENU_WIDTH);
     print_enter;
     print_enter;
@@ -190,7 +192,7 @@ void print_exercise_question(QuestionNode *question_head, int id, int selection,
             if (selection == i)
                 printf(BG_WHITE BLACK "> %c. %s <\n" RESET, 'A' + i, cur_question->option[i]);
             else
-                printf("%c. %s\n", 'A' + i, cur_question->option[i]);
+                printf("%c. %s    \n", 'A' + i, cur_question->option[i]);
         }
         // 做了的题要保存做题的状态
         else
@@ -210,9 +212,9 @@ void print_exercise_question(QuestionNode *question_head, int id, int selection,
             {
                 // 如果是答案，标为绿字
                 if (cur_question->answer - 'A' == i)
-                    printf(GREEN "%c. %s\n" RESET, 'A' + i, cur_question->option[i]);
+                    printf(GREEN "%c. %s    \n" RESET, 'A' + i, cur_question->option[i]);
                 else
-                    printf("%c. %s\n", 'A' + i, cur_question->option[i]);
+                    printf("%c. %s    \n", 'A' + i, cur_question->option[i]);
             }
         }
     }
@@ -266,14 +268,16 @@ void exercise(UserNode *cur_stu, QuestionNode *question_head)
     index = 0;
 
     printf(HIDE_CURSOR);
+    printf(CLS);
     while (1)
     {
-        printf(CLS);
-        print_space((MENU_WIDTH - 19) / 2);
-        printf(CYAN "- 当前正在做 %d/%d 题 -\n" RESET, index + 1, num);
+        // printf(CLS);
+        // print_space((MENU_WIDTH - 19) / 2);
+        // printf(CYAN BOLD "- 当前正在做 %d/%d 题 -\n" RESET, index + 1, num);
         // 按照 choosed_questions 数组中的 id 顺序打印题目
         print_exercise_question(question_head, choosed_questions[index], selection, choices[index]);
-
+        print_space((MENU_WIDTH - 19) / 2);
+        printf(CYAN BOLD "- 当前正在做 %d/%d 题 -\n" RESET, index + 1, num);
         key = get_keyboard_input();
         if (key == 'q')
             break;
@@ -293,6 +297,7 @@ void exercise(UserNode *cur_stu, QuestionNode *question_head)
             // 没做过的题目跳到选项 A
             else
                 selection = 0;
+            printf(CLS);
         }
         else if (key == KEY_RIGHT)
         {
@@ -303,6 +308,7 @@ void exercise(UserNode *cur_stu, QuestionNode *question_head)
                 selection = choices[index];
             else
                 selection = 0;
+            printf(CLS);
         }
         else if (key == KEY_ENTER)
         {
@@ -328,11 +334,12 @@ void exercise(UserNode *cur_stu, QuestionNode *question_head)
  */
 void print_exam_question(QuestionNode *cur_question, int selection, int choice, int index, int score)
 {
+    CURSOR_RESET;
     print_table(TABLE_U, MENU_WIDTH);
     print_enter;
     print_enter;
 
-    printf("%d. (%d 分) ", index + 1, score);
+    printf("%d.（%d 分）\n", index + 1, score);
     printf("%s", cur_question->question);
     print_enter;
     // 索引为 index 的题没做过
@@ -343,7 +350,7 @@ void print_exam_question(QuestionNode *cur_question, int selection, int choice, 
             if (selection == i)
                 printf(BG_WHITE BLACK "> %c. %s <\n" RESET, 'A' + i, cur_question->option[i]);
             else
-                printf("%c. %s\n", 'A' + i, cur_question->option[i]);
+                printf("%c. %s    \n", 'A' + i, cur_question->option[i]);
         }
     }
     else
@@ -361,9 +368,9 @@ void print_exam_question(QuestionNode *cur_question, int selection, int choice, 
             else
             {
                 if (selection == i)
-                    printf(BG_WHITE BLACK "%c. %s\n" RESET, 'A' + i, cur_question->option[i]);
+                    printf(BG_WHITE BLACK "%c. %s    \n" RESET, 'A' + i, cur_question->option[i]);
                 else
-                    printf("%c. %s\n", 'A' + i, cur_question->option[i]);
+                    printf("%c. %s    \n", 'A' + i, cur_question->option[i]);
             }
         }
     }
@@ -546,9 +553,10 @@ void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *c
     int key;
     int selection = 0;
 
+    printf(CLS HIDE_CURSOR);
     while (1)
     {
-        printf(CLS);
+        // printf(CLS);
         QuestionNode *cur_question = list_question_search(question_head, cur_paper->question_ids[index]);
         print_exam_question(cur_question, selection, cur_record->choices[index], index, cur_paper->question_scores[index]);
 
@@ -567,6 +575,7 @@ void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *c
             if (index <= 0)
                 continue;
             index--;
+            printf(CLS);
         }
         else if (key == KEY_RIGHT)
         {
@@ -574,6 +583,7 @@ void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *c
                 continue;
             if (index == cur_paper->total_questions - 1)
             {
+                printf(SHOW_CURSOR);
                 printf("是否交卷？（y/n）");
                 if (get_y_or_n_input())
                 {
@@ -589,6 +599,7 @@ void begin_exam(PaperNode *cur_paper, QuestionNode *question_head, ExamRecord *c
                     index--;
             }
             index++;
+            printf(CLS HIDE_CURSOR);
         }
         else if (key == KEY_ENTER)
         {
@@ -617,6 +628,7 @@ void browse_exam_paper(PaperNode *cur_paper, ExamRecord *cur_record, QuestionNod
     QuestionNode *cur_question;
     int key;
 
+    printf(HIDE_CURSOR);
     printf(CYAN BOLD "%s\n" RESET, cur_paper->title);
     printf(YELLOW BOLD "答卷时间：%s\n" RESET, cur_record->start_time);
     printf(YELLOW BOLD "交卷时间：" RESET);
@@ -637,13 +649,13 @@ void browse_exam_paper(PaperNode *cur_paper, ExamRecord *cur_record, QuestionNod
             printf(RED "%d" RESET, 0);
         printf(" 分 / ");
         printf(GREEN "%d" RESET, cur_paper->question_scores[i]);
-        printf(" 分）");
+        printf(" 分）\n");
 
         printf("%s", cur_question->question);
         print_enter;
 
         for (int j = 0; j < 4; j++)
-            printf("%c. %s\n", 'A' + j, cur_question->option[i]);
+            printf("%c. %s\n", 'A' + j, cur_question->option[j]);
 
         printf("本题答案：");
         printf(GREEN "%c\n" RESET, cur_question->answer);

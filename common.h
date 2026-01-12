@@ -14,19 +14,20 @@
 #define CATEGORYLEN 32                   // 标签/类别的字符串最大长度
 #define QDATAPATH "./data/questions.dat" // 本地题库路径
 #define MAXQ_COUNT 1000                  // 题库中题目数量的最大值
-#define ONCE_COUNT 3                     // 浏览试题时一次显示的题目数量
+#define ONCE_COUNT 2                     // 浏览试题时一次显示的题目数量
 #define END_FLAG '#'                     // 输入试题时的结束标志
 
 // 试卷及系统常量
 #define TITLELEN 100                      // 试卷标题字符串的最大长度
 #define MAX_PAPER_QUESTIONS 50            // 试卷最大题目数
-#define TIMELEN 25                        // 格式如 "2025-12-28 15:00"
+#define TIMELEN 16                        // 格式如 "2025-12-28 15:00"
 #define MAX_PAPER_COUNT 100               // 本地保存的试卷的最大数量
 #define PAPERDATAPATH "./data/papers.dat" // 本地保存试卷的位置
 
 // 用户相关常量
 #define USERDATAPATH "./data/users.dat"     // 本地存储用户信息的位置
 #define EXAMRECORDPATH "./data/records.csv" // 保存用户做题记录的位置
+#define MAX_USER_COUNT 1000                 // 用户的最大数量
 
 // 菜单相关
 #define MENU_WIDTH 60            // 菜单的宽度
@@ -35,7 +36,7 @@
 
 // 账号与密码
 #define ENCRYPT_KEY 66                     // 密钥
-#define ADMIN_ORIGIN_PWD "123456789"       // 管理员密码
+#define ADMIN_ORIGIN_PWD "123456789"       // 管理员初始密码
 #define ADMIN_PWD_PATH "./data/.admin.dat" // 管理员密码保存路径
 #define MAX_ACCOUNT_LEN 20                 // 账号的最大长度
 #define MIN_ACCOUNT_LEN 6                  // 账号的最小长度
