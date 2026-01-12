@@ -20,7 +20,7 @@ int main()
 
     int user_id, paper_id, question_id;
     load_ids(&user_id, &paper_id, &question_id);
-
+    // save_ids(1, 5, 31);
     main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
     // admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
     // stu_menu(user_head, question_head, paper_head);

@@ -27,6 +27,7 @@ void browse_cur_paper(QuestionNode *question_head, PaperNode *cur_paper);
 void browse_paper(PaperNode *paper_head, QuestionNode *question_head);
 void delete_paper(PaperNode *head);
 void publish_paper(PaperNode *head);
-PaperNode *get_edit_paper(PaperNode *head);
+PaperNode *get_chose_paper(PaperNode *head);
+void export_paper(QuestionNode *questioin_head, PaperNode *cur_paper);
 
 #endif

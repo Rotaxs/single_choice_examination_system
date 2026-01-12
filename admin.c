@@ -292,7 +292,7 @@ void show_stu_exercise_info(UserNode *user_head)
 {
     UserNode *cur_user = user_head->next;
     int ids[MAX_USER_COUNT];
-    printf("用户id\t用户名\t练习题量\n");
+    printf("%-8s          %-24s%-8s\n", "用户ID", "用户名", "练习题量");
     print_table(TABLE_U, MENU_WIDTH);
     print_enter;
     print_enter;
@@ -302,7 +302,7 @@ void show_stu_exercise_info(UserNode *user_head)
     for (int i = 0; i < len; i++)
     {
         cur_user = list_user_search_by_id(user_head, ids[i]);
-        printf("%d\t%s\t%d\n", cur_user->id, cur_user->account, cur_user->exercised_question_count);
+        printf("%-8d        %-24s%-8d\n", cur_user->id, cur_user->account, cur_user->exercised_question_count);
     }
 
     print_enter;
@@ -750,6 +750,19 @@ void display_question_noticed(QuestionNode *q_head, int start_index, int end_ind
 }
 
 /**
+ * @brief 菜单功能辅助函数：计算试卷总分
+ * @param cur_paper 要计算总分的试卷
+ */
+void calc_paper_score(PaperNode *cur_paper)
+{
+    cur_paper->paper_score = 0;
+    for (int i = 0; i < cur_paper->total_questions; i++)
+    {
+        cur_paper->paper_score += cur_paper->question_scores[i];
+    }
+}
+
+/**
  * @brief 菜单功能函数：选择试题
  * @param q_head 试题数据链表
  * @param cur_paper 当前编辑的试卷结点
@@ -828,7 +841,9 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
                 }
                 else
                 {
-                    cur_paper->question_ids[cur_paper->total_questions++] = ids[index];
+                    cur_paper->question_ids[cur_paper->total_questions] = ids[index];
+                    cur_paper->question_scores[cur_paper->total_questions] = 0;
+                    cur_paper->total_questions++;
                     is_chosen[index] = true;
                 }
             }
@@ -839,6 +854,7 @@ void choose_question(QuestionNode *q_head, PaperNode *cur_paper)
             break;
         }
     }
+    calc_paper_score(cur_paper);
 }
 
 /**
@@ -1022,7 +1038,6 @@ PaperNode *init_cur_paper(char *title, int size, int *cur_id)
  */
 void add_paper(PaperNode *paper_head, PaperNode *cur_paper)
 {
-
     list_paper_add(paper_head, cur_paper->id, cur_paper->title,
                    cur_paper->question_ids, cur_paper->question_scores, cur_paper->total_questions, cur_paper->paper_score,
                    cur_paper->start_time, cur_paper->end_time, cur_paper->published);
@@ -1258,7 +1273,7 @@ void publish_paper(PaperNode *head)
  * @param head 试卷数据链表
  * @return 返回要编辑的试卷结点
  */
-PaperNode *get_edit_paper(PaperNode *head)
+PaperNode *get_chose_paper(PaperNode *head)
 {
     if (head->next == NULL)
     {
@@ -1292,4 +1307,29 @@ PaperNode *get_edit_paper(PaperNode *head)
         }
     }
     return NULL;
+}
+
+/**
+ * @brief 导出试卷
+ * @param question_head 试题数据链表
+ * @param cur_paper 要导出的试卷的结点
+ */
+void export_paper(QuestionNode *question_head, PaperNode *cur_paper)
+{
+    char file_path[TIMELEN + TITLELEN + 1];
+    Date date = get_date();
+    sprintf(file_path, "%s/%04d_%02d_%02d-%02d_%02d-%d.txt", EXPORTED_PAPER_PATH, date.year, date.month, date.day, date.hour, date.minute, cur_paper->id);
+    printf(CLS HIDE_CURSOR);
+    if (save_paper(question_head, cur_paper, file_path))
+    {
+        printf(HIDE_CURSOR);
+        INFO("导出成功");
+        usleep(WAITING_TIME);
+    }
+    else
+    {
+        printf(HIDE_CURSOR);
+        ERR("导出失败");
+        usleep(WAITING_TIME);
+    }
 }

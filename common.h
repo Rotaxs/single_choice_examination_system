@@ -18,11 +18,12 @@
 #define END_FLAG '#'                     // 输入试题时的结束标志
 
 // 试卷及系统常量
-#define TITLELEN 100                      // 试卷标题字符串的最大长度
-#define MAX_PAPER_QUESTIONS 50            // 试卷最大题目数
-#define TIMELEN 16                        // 格式如 "2025-12-28 15:00"
-#define MAX_PAPER_COUNT 100               // 本地保存的试卷的最大数量
-#define PAPERDATAPATH "./data/papers.dat" // 本地保存试卷的位置
+#define TITLELEN 100                        // 试卷标题字符串的最大长度
+#define MAX_PAPER_QUESTIONS 50              // 试卷最大题目数
+#define TIMELEN 16                          // 格式如 "2025-12-28 15:00"
+#define MAX_PAPER_COUNT 100                 // 本地保存的试卷的最大数量
+#define PAPERDATAPATH "./data/papers.dat"   // 本地保存试卷数据的位置
+#define EXPORTED_PAPER_PATH "./data/papers" // 保存导出的试卷的文件夹
 
 // 用户相关常量
 #define USERDATAPATH "./data/users.dat"     // 本地存储用户信息的位置
@@ -44,7 +45,8 @@
 #define MIN_PWD_LEN 6                      // 密码的最小长度
 #define PWD_ATTEMP_COUNT 5                 // 密码尝试次数
 
-#define IDS_PATH "./data/ids.dat"
+#define DATA_PATH "./data"        // data 文件夹路径
+#define IDS_PATH "./data/ids.dat" // 最新 id 保存路径
 
 #define WAITING_TIME 1000000
 #define LOADING_TIME 100000

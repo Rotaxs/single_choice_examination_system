@@ -1,6 +1,7 @@
 #include "file_io.h"
 #include "common.h"
 #include "utils.h"
+#include <direct.h>
 
 /**
  * @brief 文件 I/O 函数：保存管理员密码
@@ -12,8 +13,14 @@ bool save_admin_password(char *admin_pwd)
     FILE *fp = fopen(ADMIN_PWD_PATH, "wb");
     if (fp == NULL)
     {
-        ERR("打开管理员数据文件失败");
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(ADMIN_PWD_PATH, "wb");
+        if (fp == NULL)
+        {
+            ERR("打开管理员数据文件失败");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
     cipher(admin_pwd);
     fwrite(admin_pwd, MAX_PWD_LEN + 1, 1, fp);
@@ -56,8 +63,14 @@ bool save_exam_records(UserNode *user_head, PaperNode *paper_head)
     FILE *fp = fopen(EXAMRECORDPATH, "w");
     if (fp == NULL)
     {
-        ERR("打开考试记录文件失败");
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(EXAMRECORDPATH, "w");
+        if (fp = NULL)
+        {
+            ERR("打开考试记录文件失败");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
     UserNode *cur_stu = user_head->next;
     for (; cur_stu; cur_stu = cur_stu->next)
@@ -154,7 +167,7 @@ bool load_exam_records(UserNode *user_head, PaperNode *paper_head)
 
 /**
  * @brief 文件 I/O 函数：保存用户链表中的数据到文件
- * @param head 用户链表的头指针
+ * @param user_head 用户链表的头指针
  * @return 如果保存成功，返回 true，否则返回 false
  */
 bool save_user_data(UserNode *user_head, PaperNode *paper_head)
@@ -162,8 +175,14 @@ bool save_user_data(UserNode *user_head, PaperNode *paper_head)
     FILE *fp = fopen(USERDATAPATH, "wb");
     if (fp == NULL)
     {
-        ERR("打开用户数据文件失败");
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(USERDATAPATH, "wb");
+        if (fp == NULL)
+        {
+            ERR("打开用户数据文件失败");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
 
     UserNode *cur_node = user_head->next;
@@ -188,7 +207,7 @@ bool save_user_data(UserNode *user_head, PaperNode *paper_head)
 
 /**
  * @brief 文件 I/O 函数：读取文件中的用户数据
- * @param head 用户链表的头指针
+ * @param user_head 用户链表的头指针
  * @return 读取成功返回 true，否则返回 false
  */
 bool load_user_data(UserNode *user_head, PaperNode *paper_head)
@@ -220,8 +239,14 @@ bool save_question_data(QuestionNode *head)
     FILE *fp = fopen(QDATAPATH, "wb");
     if (fp == NULL)
     {
-        printf(RED "Error: 打开试题数据文件时出错" RESET);
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(QDATAPATH, "wb");
+        if (fp == NULL)
+        {
+            ERR("打开试题数据文件时出错");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
     int data_size = sizeof(QuestionNode) - sizeof(QuestionNode *);
     QuestionNode *cur_node = head->next;
@@ -275,8 +300,14 @@ bool save_paper_data(PaperNode *head)
     FILE *fp = fopen(PAPERDATAPATH, "wb");
     if (fp == NULL)
     {
-        printf(RED "Error: 打开试卷数据文件时出错" RESET);
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(PAPERDATAPATH, "wb");
+        if (fp == NULL)
+        {
+            ERR("打开试卷数据文件时出错");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
 
     int data_size = sizeof(PaperNode) - sizeof(PaperNode *);
@@ -355,13 +386,65 @@ bool save_ids(int user_id, int paper_id, int question_id)
     FILE *fp = fopen(IDS_PATH, "wb");
     if (fp == NULL)
     {
-        printf(RED BOLD "Error: 打开ID文件时发生错误" RESET);
-        return false;
+        _mkdir(DATA_PATH);
+        fp = fopen(IDS_PATH, "wb");
+        if (fp == NULL)
+        {
+            ERR("打开ID文件时发生错误");
+            usleep(WAITING_TIME);
+            return false;
+        }
     }
 
     fwrite(&user_id, sizeof(user_id), 1, fp);
     fwrite(&paper_id, sizeof(paper_id), 1, fp);
     fwrite(&question_id, sizeof(question_id), 1, fp);
+
+    fclose(fp);
+    return true;
+}
+
+/**
+ * @brief 将试卷以文本形式导出
+ * @param cur_paper 要导出的试卷的试卷结点
+ * @return 导出成功，返回 true，否则返回 false
+ */
+bool save_paper(QuestionNode *question_head, PaperNode *cur_paper, char *file_path)
+{
+    FILE *fp = fopen(file_path, "w");
+    if (fp == NULL)
+    {
+        _mkdir(EXPORTED_PAPER_PATH);
+        fp = fopen(file_path, "w");
+        if (fp == NULL)
+        {
+            printf(RED "打开文件 %s 时发生错误\n" RESET, file_path);
+            usleep(WAITING_TIME);
+            return false;
+        }
+    }
+
+    fprintf(fp, "试卷标题：%s\n", cur_paper->title);
+    fprintf(fp, "考试时间：%s - %s\n", cur_paper->start_time, cur_paper->end_time);
+    fprintf(fp, "试卷总分：%d\n", cur_paper->paper_score);
+    fprintf(fp, "\n");
+
+    QuestionNode *cur_question;
+    for (int i = 0; i < cur_paper->total_questions; i++)
+    {
+        cur_question = list_question_search(question_head, cur_paper->question_ids[i]);
+        fprintf(fp, "%d. （%d 分）\n", i + 1, cur_paper->question_scores[i]);
+        // 输出题目
+        fprintf(fp, "%s\n", cur_question->question);
+        // 输出选项
+        for (int j = 0; j < 4; j++)
+        {
+            fprintf(fp, "%c. %s\n", 'A' + j, cur_question->option[j]);
+        }
+        // 输出答案
+        fprintf(fp, "答案：%c\n", cur_question->answer);
+        fprintf(fp, "\n");
+    }
 
     fclose(fp);
     return true;

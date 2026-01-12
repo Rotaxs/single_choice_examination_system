@@ -273,8 +273,8 @@ void admin_manage_stu_menu(UserNode *user_head, PaperNode *paper_head, int *cur_
 
 void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper)
 {
-    const int option_count = 7;
-    const int assemble_option = 0, title_option = 1, score_option = 2, time_option = 3, browse_option = 4, publish_option = 5, exit_option = 6;
+    const int option_count = 8;
+    const int assemble_option = 0, title_option = 1, score_option = 2, time_option = 3, browse_option = 4, publish_option = 5, export_option = 6, exit_option = 7;
     char buffer[100];
     const Text title = {"组卷系统", 8};
     Text prompt;
@@ -285,6 +285,7 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
         {"4. 设置考试时间", 15},
         {"5. 浏览当前试卷", 15},
         {"6. 发布当前试卷", 15},
+        {"7. 导出当前试卷", 15},
         {"0. 保存并退出", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -340,6 +341,10 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
                 printf(HIDE_CURSOR);
                 browse_cur_paper(question_head, cur_paper);
             }
+            else if (selection == export_option)
+            {
+                export_paper(question_head, cur_paper);
+            }
             printf(HIDE_CURSOR CLS);
         }
     }
@@ -347,8 +352,8 @@ void admin_assemble_paper_menu(QuestionNode *question_head, PaperNode *cur_paper
 
 void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head, int *cur_stu_id, int *cur_paper_id, int *cur_question_id)
 {
-    const int option_count = 6;
-    const int assemble_option = 0, browse_option = 1, delete_option = 2, edit_option = 3, publish_option = 4, exit_option = 5;
+    const int option_count = 7;
+    const int assemble_option = 0, browse_option = 1, delete_option = 2, edit_option = 3, publish_option = 4, export_option = 5, exit_option = 6;
     const Text title = {"试卷管理", 8};
     char buffer[40];
     int len;
@@ -359,6 +364,7 @@ void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head,
         {"3. 删除试卷", 11},
         {"4. 编辑试卷", 11},
         {"5. 发布试卷", 11},
+        {"6. 导出试卷", 11},
         {"0. 返回上一级", 13}};
 
     printf(HIDE_CURSOR CLS);
@@ -413,12 +419,18 @@ void admin_manage_paper_menu(PaperNode *paper_head, QuestionNode *question_head,
             }
             else if (selection == edit_option)
             {
-                PaperNode *cur_paper = get_edit_paper(paper_head);
+                PaperNode *cur_paper = get_chose_paper(paper_head);
                 if (cur_paper != NULL)
                 {
                     admin_assemble_paper_menu(question_head, cur_paper);
                     save_paper_data(paper_head);
                 }
+            }
+            else if (selection == export_option)
+            {
+                PaperNode *cur_paper = get_chose_paper(paper_head);
+                if (cur_paper != NULL)
+                    export_paper(question_head, cur_paper);
             }
             printf(CLS HIDE_CURSOR);
         }

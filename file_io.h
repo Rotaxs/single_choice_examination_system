@@ -13,5 +13,6 @@ bool save_paper_data(PaperNode *head);
 bool load_paper_data(PaperNode *head);
 void load_ids(int *user_id, int *paper_id, int *quetion_id);
 bool save_ids(int user_id, int paper_id, int question_id);
+bool save_paper(QuestionNode *question_head, PaperNode *cur_paper, char *file_path);
 
 #endif
