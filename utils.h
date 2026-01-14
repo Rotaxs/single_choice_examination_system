@@ -174,4 +174,6 @@ int list_paper_get_published(PaperNode *head, int *ids, int ids_len);
 // 做题记录的链表操作
 ExamRecord *list_examRecord_add(ExamRecord *head, int paper_id, int score, bool is_finished, char *start_time, char *end_time, int *choices);
 
+void print_text(char *text, int pre_space);
+
 #endif

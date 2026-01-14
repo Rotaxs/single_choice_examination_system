@@ -20,14 +20,20 @@ int main()
 
     int user_id, paper_id, question_id;
     load_ids(&user_id, &paper_id, &question_id);
-    // save_ids(1, 5, 31);
     main_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
-    // admin_menu(user_head, paper_head, question_head, &user_id, &paper_id, &question_id);
-    // stu_menu(user_head, question_head, paper_head);
 
     list_user_destroy(user_head);
     list_paper_destroy(paper_head);
     list_question_destroy(question_head);
+
+    printf(CYAN);
+    print_text("THANKS FOR USING", 8);
+    print_enter;
+    print_enter;
+    print_text("SINGLE CHOICE", 18);
+    print_enter;
+    print_text("EXAMINATION SYSTEM", 0);
+    printf(RESET);
 
     return 0;
 }

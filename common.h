@@ -48,6 +48,7 @@
 #define DATA_PATH "./data"        // data 文件夹路径
 #define IDS_PATH "./data/ids.dat" // 最新 id 保存路径
 
+#define BANNER_CHAR "\u2588"
 #define WAITING_TIME 1000000
 #define LOADING_TIME 100000
 

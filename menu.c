@@ -149,8 +149,8 @@ void main_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *questio
     }
 
     printf(SHOW_CURSOR CLS);
-    printf("您已经安全退出标准化选择题考试系统\n");
-    printf("欢迎下次使用\n");
+    // printf("您已经安全退出标准化选择题考试系统\n");
+    // printf("欢迎下次使用\n");
 }
 
 void admin_menu(UserNode *user_head, PaperNode *paper_head, QuestionNode *question_head,
